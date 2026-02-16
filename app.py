@@ -69,7 +69,8 @@ def init_clients(config):
 
         weather_client = None
         if config.WEATHER_API_KEY:
-            weather_client = WeatherClient(api_key=config.WEATHER_API_KEY)
+            # 使用 OpenWeatherMap（推荐）
+            weather_client = WeatherClient.create(config.WEATHER_API_KEY, provider="openweather")
 
         return {
             "ai": ai_client,
