@@ -47,11 +47,15 @@ class WeatherClient:
 
             if response.status_code == 200:
                 data = response.json()
-                if data.get("code") == "200" and data.get("location"):
+                code = data.get("code")
+                # 和风天气 API 返回的 code 可能是字符串 "200" 或整数 200
+                if (code == "200" or code == 200) and data.get("location"):
                     # 返回第一个匹配的城市
-                    return data["location"][0]["id"]
+                    city_id = data["location"][0]["id"]
+                    logger.info(f"找到城市: {city_name} -> {city_id}")
+                    return city_id
                 else:
-                    logger.warning(f"未找到城市: {city_name}")
+                    logger.warning(f"未找到城市: {city_name}, API返回: code={code}")
             return None
 
         except Exception as e:

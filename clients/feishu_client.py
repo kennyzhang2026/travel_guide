@@ -148,9 +148,7 @@ class FeishuClient:
             table_id=self.request_table_id
         )
 
-        # 计算创建时间戳（毫秒）
-        created_at = int(time.time() * 1000)
-
+        # 只使用飞书表格中定义的字段
         fields = {
             "request_id": request_data.get("request_id", str(uuid.uuid4())),
             "destination": request_data.get("destination", ""),
@@ -159,7 +157,6 @@ class FeishuClient:
             "end_date": request_data.get("end_date", ""),
             "budget": request_data.get("budget", 0),
             "preferences": request_data.get("preferences", ""),
-            "created_at": created_at
         }
 
         payload = {"fields": fields}
@@ -170,7 +167,9 @@ class FeishuClient:
         if result:
             logger.info(f"旅行需求已保存: {request_data.get('destination')}")
             return {"success": True, "record_id": result.get("data", {}).get("record", {}).get("record_id")}
-        return {"success": False, "error": "保存失败"}
+        else:
+            logger.error(f"旅行需求保存失败: {request_data}")
+            return {"success": False, "error": "保存失败"}
 
     # ==================== 攻略存档表操作 ====================
 
@@ -198,16 +197,13 @@ class FeishuClient:
             table_id=self.guide_table_id
         )
 
-        # 计算创建时间戳（毫秒）
-        created_at = int(time.time() * 1000)
-
+        # 只使用飞书表格中定义的字段
         fields = {
             "guide_id": guide_id,
             "request_id": request_id,
             "destination": destination,
             "weather_info": weather_info,
             "guide_content": guide_content,
-            "created_at": created_at
         }
 
         payload = {"fields": fields}
@@ -218,7 +214,9 @@ class FeishuClient:
         if result:
             logger.info(f"攻略已保存: {destination} ({guide_id})")
             return {"success": True, "record_id": result.get("data", {}).get("record", {}).get("record_id")}
-        return {"success": False, "error": "保存失败"}
+        else:
+            logger.error(f"攻略保存失败: {destination}")
+            return {"success": False, "error": "保存失败"}
 
     def get_travel_guide(self, guide_id: str) -> Optional[Dict[str, Any]]:
         """
