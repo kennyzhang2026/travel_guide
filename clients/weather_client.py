@@ -187,15 +187,30 @@ class WeatherClient:
         try:
             start = datetime.strptime(start_date, "%Y-%m-%d")
             end = datetime.strptime(end_date, "%Y-%m-%d")
-            trip_days = (end - start).days + 1
         except:
-            trip_days = 3
+            return f"⚠️ 日期格式错误，无法获取天气信息"
 
-        forecast = result.get("forecast", [])[:trip_days]
+        # 获取所有预报数据
+        all_forecast = result.get("forecast", [])
 
-        lines = [f"📍 {city_name} 天气预报:\n"]
+        # 找到旅行日期范围内的天气
+        trip_forecast = []
+        for day_data in all_forecast:
+            try:
+                day_date = datetime.strptime(day_data.get("fxDate", ""), "%Y-%m-%d")
+                # 只包含旅行日期范围内的天气
+                if start <= day_date <= end:
+                    trip_forecast.append(day_data)
+            except:
+                continue
 
-        for day in forecast:
+        # 如果没有找到对应日期的天气
+        if not trip_forecast:
+            return f"⚠️ 暂无法获取 {start_date} 至 {end_date} 的天气预报（和风天气免费版仅支持7天内预报）"
+
+        lines = [f"📍 {city_name} 天气预报 ({start_date} 至 {end_date}):\n"]
+
+        for day in trip_forecast:
             date = day.get("fxDate", "")
             temp_max = day.get("tempMax", "")
             temp_min = day.get("tempMin", "")
