@@ -122,17 +122,32 @@ advice = client.get_clothing_advice(weather_data)
 
 **模块**: `clients/feishu_client.py`
 
+**注意**: 本项目使用两个独立的多维表格，需要分别传入对应的 app_token
+
 #### 初始化
 
 ```python
 from clients.feishu_client import FeishuClient
 
-client = FeishuClient(
+# 为需求表创建客户端
+request_client = FeishuClient(
     app_id="cli_xxx",
     app_secret="xxx",
-    app_token="bascnxxx"
+    app_token="bascnxxxxx"  # 需求表的 app_token
+)
+
+# 为攻略表创建客户端
+guide_client = FeishuClient(
+    app_id="cli_xxx",        # 同一个应用
+    app_secret="xxx",        # 同一个密钥
+    app_token="bascnxxxxx"   # 攻略表的 app_token
 )
 ```
+
+**参数**:
+- `app_id` (str): 飞书应用 ID（两个客户端共用）
+- `app_secret` (str): 飞书应用密钥（两个客户端共用）
+- `app_token` (str): 多维表格的 app_token（每个表格不同）
 
 #### 方法
 
@@ -141,7 +156,8 @@ client = FeishuClient(
 添加旅行需求记录
 
 ```python
-result = client.add_travel_request("tblxxx", {
+# 使用需求表客户端
+result = request_client.add_record("tblxxxxx", {
     "request_id": "req_xxx",
     "destination": "北京",
     "origin": "上海",
@@ -166,7 +182,8 @@ result = client.add_travel_request("tblxxx", {
 添加攻略存档记录
 
 ```python
-result = client.add_travel_guide("tblxxx", {
+# 使用攻略表客户端
+result = guide_client.add_record("tblxxxxx", {
     "guide_id": "guide_xxx",
     "request_id": "req_xxx",
     "destination": "北京",

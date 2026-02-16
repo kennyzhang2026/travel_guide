@@ -49,6 +49,19 @@ travel_guide/
 
 ## 飞书数据表设计
 
+### 多维表格结构
+
+```
+飞书应用 (APP_ID/APP_SECRET 共用)
+├── 多维表格1: 旅行需求表
+│   ├── app_token: FEISHU_APP_TOKEN_REQUEST
+│   └── table_id: FEISHU_TABLE_ID_REQUEST
+│
+└── 多维表格2: 攻略存档表
+    ├── app_token: FEISHU_APP_TOKEN_GUIDE
+    └── table_id: FEISHU_TABLE_ID_GUIDE
+```
+
 ### 用户需求表 (travel_requests)
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -141,15 +154,34 @@ travel_guide/
 
 ### 配置清单
 
-**待用户提供的飞书配置**:
-- [ ] FEISHU_APP_ID
-- [ ] FEISHU_APP_SECRET
-- [ ] FEISHU_APP_TOKEN
-- [ ] FEISHU_TABLE_ID_REQUEST
-- [ ] FEISHU_TABLE_ID_GUIDE
+**待用户提供的飞书配置** (2个独立的多维表格):
+- [ ] FEISHU_APP_ID - 飞书应用 ID
+- [ ] FEISHU_APP_SECRET - 飞书应用密钥
+- [ ] FEISHU_APP_TOKEN_REQUEST - 旅行需求多维表格的 app_token
+- [ ] FEISHU_TABLE_ID_REQUEST - 旅行需求表的 table_id
+- [ ] FEISHU_APP_TOKEN_GUIDE - 攻略存档多维表格的 app_token
+- [ ] FEISHU_TABLE_ID_GUIDE - 攻略存档表的 table_id
 
 **待用户提供的 AI 配置**:
 - [ ] DEEPSEEK_API_KEY
 
 **可选配置**:
 - [ ] WEATHER_API_KEY (和风天气)
+
+### 飞书配置获取指南
+
+1. 访问 [飞书开放平台](https://open.feishu.cn/)
+2. 创建企业自建应用，获取 `APP_ID` 和 `APP_SECRET`
+3. 在飞书文档中创建**两个独立的多维表格**：
+   - 多维表格1: 旅行需求表
+   - 多维表格2: 攻略存档表
+4. 从每个多维表格的 URL 中获取 `app_token`:
+   ```
+   URL 格式: https://xxx.feishu.cn/base/bascnxxxxxxx/app_tokenxxxxxxx
+                                        └─────────┘  └────────────┘
+                                      (可忽略)      (这就是 app_token)
+   ```
+5. 从每个多维表格中获取表格的 `table_id`:
+   - 打开多维表格，点击"..."
+   - 选择"高级" -> "开发选项"
+   - 复制 Table ID

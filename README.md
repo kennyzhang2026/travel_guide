@@ -39,21 +39,27 @@ pip install -r requirements.txt
 创建 `.streamlit/secrets.toml` 文件：
 
 ```toml
-# AI 模型配置 (二选一)
+# AI 模型配置
 DEEPSEEK_API_KEY = "sk-xxx"
-# 或
-GEMINI_API_KEY = "AIzaSyxxx"
 
-# 飞书多维表格配置 (可选)
+# 飞书多维表格配置 (2个独立表格)
+# 应用配置（共用）
 FEISHU_APP_ID = "cli_xxx"
 FEISHU_APP_SECRET = "xxx"
-FEISHU_APP_TOKEN = "bascnxxx"
-FEISHU_TABLE_ID_REQUEST = "tblxxx"
-FEISHU_TABLE_ID_GUIDE = "tblxxx"
+
+# 需求表配置
+FEISHU_APP_TOKEN_REQUEST = "bascnxxxxx"
+FEISHU_TABLE_ID_REQUEST = "tblxxxxx"
+
+# 攻略表配置
+FEISHU_APP_TOKEN_GUIDE = "bascnxxxxx"
+FEISHU_TABLE_ID_GUIDE = "tblxxxxx"
 
 # 天气 API 配置 (可选)
 WEATHER_API_KEY = "xxx"
 ```
+
+> **注意**: 需要创建**两个独立的飞书多维表格**，每个表格有自己的 app_token 和 table_id
 
 ### 4. 运行应用
 
