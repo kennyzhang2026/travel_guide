@@ -114,7 +114,7 @@ def render_sidebar():
                             st.write(f"需求表: {'✅' if test_result.get('request_table') else '❌'}")
                             st.write(f"攻略表: {'✅' if test_result.get('guide_table') else '❌'}")
                             if test_result.get('error_msg'):
-                                st.info(test_result['error_msg']))
+                                st.info(test_result['error_msg'])
         else:
             st.error("❌ 配置未加载")
 
