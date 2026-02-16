@@ -92,15 +92,29 @@ def render_sidebar():
         if st.session_state.get('config_loaded'):
             st.success("✅ 配置已加载")
 
-            # 测试飞书连接
+            # 测试各种连接
             if st.session_state.get('clients_initialized'):
                 clients = st.session_state.get('clients', {})
+
+                # 天气 API 状态
+                if clients.get('weather'):
+                    st.success("✅ 天气 API 已启用")
+                else:
+                    st.info("ℹ️ 天气 API 未配置")
+
+                # 飞书连接状态
                 if 'feishu' in clients:
                     test_result = clients['feishu'].test_connection()
                     if test_result.get('all_ok'):
                         st.success("✅ 飞书连接正常")
                     else:
                         st.warning("⚠️ 飞书连接异常")
+                        with st.expander("查看详情"):
+                            st.write(f"Token: {'✅' if test_result.get('token') else '❌'}")
+                            st.write(f"需求表: {'✅' if test_result.get('request_table') else '❌'}")
+                            st.write(f"攻略表: {'✅' if test_result.get('guide_table') else '❌'}")
+                            if test_result.get('error_msg'):
+                                st.info(test_result['error_msg']))
         else:
             st.error("❌ 配置未加载")
 

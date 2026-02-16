@@ -115,9 +115,9 @@ class FeishuClient:
                     if data.get("code") == 0:
                         return data
                     else:
-                        logger.warning(f"API 返回错误: {data.get('msg', 'Unknown error')}")
+                        logger.warning(f"API 返回错误: code={data.get('code')}, msg={data.get('msg', 'Unknown error')}")
                 else:
-                    logger.warning(f"HTTP 状态码: {response.status_code}")
+                    logger.warning(f"HTTP 状态码: {response.status_code}, 响应: {response.text[:200]}")
             except Exception as e:
                 logger.error(f"请求失败 (尝试 {attempt + 1}/{self.max_retries}): {e}")
                 if attempt < self.max_retries - 1:
@@ -301,6 +301,8 @@ class FeishuClient:
             )
             result = self._make_request("GET", url, params={"page_size": 1})
             request_table_ok = result is not None
+            if not request_table_ok:
+                logger.error(f"需求表测试失败，请检查权限和配置")
 
             # 测试攻略表
             url = self.BITABLE_URL.format(
@@ -309,10 +311,33 @@ class FeishuClient:
             )
             result = self._make_request("GET", url, params={"page_size": 1})
             guide_table_ok = result is not None
+            if not guide_table_ok:
+                logger.error(f"攻略表测试失败，请检查权限和配置")
 
         return {
             "token": token_ok,
             "request_table": request_table_ok,
             "guide_table": guide_table_ok,
-            "all_ok": token_ok and request_table_ok and guide_table_ok
+            "all_ok": token_ok and request_table_ok and guide_table_ok,
+            "error_msg": self._get_permission_help() if not (token_ok and request_table_ok and guide_table_ok) else None
         }
+
+    def _get_permission_help(self) -> str:
+        """获取权限配置帮助信息"""
+        return """
+飞书多维表格权限配置指南：
+
+1. 访问 https://open.feishu.cn/app，找到你的应用
+
+2. 在"权限管理"中添加以下权限：
+   - bitable:app (查看、评论和编辑多维表格)
+
+3. 或者在多维表格中：
+   - 打开多维表格，点击"分享"
+   - 添加你的企业自建应用
+   - 给予"可编辑"权限
+
+4. 确认 app_token 和 table_id 正确
+   - app_token: 在多维表格 URL 中
+   - table_id: 在"..." -> "高级" -> "开发选项"中
+        """
