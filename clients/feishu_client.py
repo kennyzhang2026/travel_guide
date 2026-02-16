@@ -150,15 +150,28 @@ class FeishuClient:
             table_id=self.request_table_id
         )
 
+        # 转换日期为 Unix 时间戳（毫秒）
+        def date_to_timestamp(date_str: str) -> int:
+            try:
+                dt = datetime.strptime(date_str, "%Y-%m-%d")
+                return int(dt.timestamp() * 1000)
+            except:
+                return 0
+
+        # 处理 preferences：如果是字符串，转换为单元素列表
+        preferences_value = request_data.get("preferences", "")
+        if isinstance(preferences_value, str):
+            preferences_value = [preferences_value] if preferences_value else []
+
         # 只使用飞书表格中定义的字段
         fields = {
             "request_id": request_data.get("request_id", str(uuid.uuid4())),
             "destination": request_data.get("destination", ""),
             "origin": request_data.get("origin", ""),
-            "start_date": request_data.get("start_date", ""),
-            "end_date": request_data.get("end_date", ""),
+            "start_date": date_to_timestamp(request_data.get("start_date", "")),
+            "end_date": date_to_timestamp(request_data.get("end_date", "")),
             "budget": request_data.get("budget", 0),
-            "preferences": request_data.get("preferences", ""),
+            "preferences": preferences_value,
         }
 
         payload = {"fields": fields}
