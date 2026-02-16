@@ -115,9 +115,11 @@ class FeishuClient:
                     if data.get("code") == 0:
                         return data
                     else:
-                        logger.warning(f"API 返回错误: code={data.get('code')}, msg={data.get('msg', 'Unknown error')}")
+                        logger.warning(f"API 返回错误: code={data.get('code')}, msg={data.get('msg')}")
+                        logger.warning(f"完整响应: {data}")
                 else:
-                    logger.warning(f"HTTP 状态码: {response.status_code}, 响应: {response.text[:200]}")
+                    logger.warning(f"HTTP 状态码: {response.status_code}")
+                    logger.warning(f"响应内容: {response.text[:500]}")
             except Exception as e:
                 logger.error(f"请求失败 (尝试 {attempt + 1}/{self.max_retries}): {e}")
                 if attempt < self.max_retries - 1:

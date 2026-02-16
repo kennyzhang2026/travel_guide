@@ -369,7 +369,73 @@ def render_guide(guide_data: Dict[str, Any]):
 
     st.divider()
 
-    # 操作按钮
+    # ==================== 优化攻略功能 ====================
+    st.subheader("✨ 优化攻略")
+    st.markdown("对当前攻略不满意？告诉 AI 需要如何改进：")
+
+    # 优化建议输入
+    optimize_suggestion = st.text_input(
+        "优化建议",
+        placeholder="例如：增加更多美食推荐、补充具体交通路线、推荐更便宜的住宿...",
+        label_visibility="collapsed",
+        key="optimize_input"
+    )
+
+    col_opt1, col_opt2, col_opt3, col_opt4 = st.columns(4)
+
+    with col_opt1:
+        if st.button("🍜 更多美食", use_container_width=True, key="opt_food"):
+            optimize_suggestion = "请增加更多当地特色美食推荐，包括具体餐厅和人均消费"
+
+    with col_opt2:
+        if st.button("🚌 交通详情", use_container_width=True, key="opt_transport"):
+            optimize_suggestion = "请补充详细的交通路线和费用信息"
+
+    with col_opt3:
+        if st.button("💰 省钱攻略", use_container_width=True, key="opt_budget"):
+            optimize_suggestion = "请推荐更多省钱的方法和优惠信息"
+
+    with col_opt4:
+        if st.button("📍 小众景点", use_container_width=True, key="opt_hidden"):
+            optimize_suggestion = "请推荐一些当地人去的小众景点，避开游客"
+
+    # 优化按钮
+    col_left, col_right = st.columns([3, 1])
+    with col_left:
+        optimize_button = st.button("🚀 优化攻略", use_container_width=True, type="primary")
+
+    if optimize_button and optimize_suggestion:
+        with st.spinner("AI 正在优化攻略..."):
+            try:
+                ai_client = st.session_state.clients['ai']
+                result = ai_client.chat(
+                    message=f"""请根据以下用户建议，优化并重写旅游攻略：
+
+【用户建议】
+{optimize_suggestion}
+
+【原攻略】
+{guide_data['content']}
+
+请保持原攻略的结构和格式，只根据用户建议进行针对性改进。""",
+                    system_prompt="你是一位专业的旅游规划助手，擅长根据用户反馈优化旅游攻略。请保持友好、专业的语气。",
+                    model="deepseek-chat",
+                    temperature=0.7
+                )
+
+                if result.get('success'):
+                    # 更新攻略内容
+                    guide_data['content'] = result['content']
+                    st.session_state.current_guide = guide_data
+                    st.rerun()
+                else:
+                    st.error(f"优化失败: {result.get('error')}")
+            except Exception as e:
+                st.error(f"优化失败: {e}")
+
+    st.divider()
+
+    # ==================== 原有操作按钮 ====================
     col1, col2, col3 = st.columns(3)
 
     with col1:
