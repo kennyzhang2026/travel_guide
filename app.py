@@ -127,6 +127,25 @@ def render_request_form():
     """渲染旅行需求表单"""
     st.subheader("📝 填写旅行需求")
 
+    # 快速偏好选择（在表单外部）
+    if "selected_preference" not in st.session_state:
+        st.session_state.selected_preference = ""
+
+    st.write("🏷️ 快速选择偏好：")
+    col_a, col_b, col_c, col_d = st.columns(4)
+    with col_a:
+        if st.button("🏛️ 人文古迹", key="pref_history"):
+            st.session_state.selected_preference = "喜欢人文古迹，参观博物馆和历史景点"
+    with col_b:
+        if st.button("🏔️ 自然风光", key="pref_nature"):
+            st.session_state.selected_preference = "喜欢自然风光，爬山看风景"
+    with col_c:
+        if st.button("🍜 美食之旅", key="pref_food"):
+            st.session_state.selected_preference = "美食之旅，想尝当地特色小吃"
+    with col_d:
+        if st.button("👨‍👩‍👧 亲子游", key="pref_family"):
+            st.session_state.selected_preference = "亲子游，带小孩，需要适合儿童的活动"
+
     with st.form("travel_request_form"):
         col1, col2 = st.columns(2)
 
@@ -173,28 +192,11 @@ def render_request_form():
 
         preferences = st.text_area(
             "偏好/需求",
+            value=st.session_state.selected_preference,
             placeholder="例如：喜欢自然风光、想尝当地美食、带小孩...",
             help="有什么特殊需求或偏好？",
             height=80
         )
-
-        # 快速偏好选择
-        st.write("快速选择：")
-        col_a, col_b, col_c, col_d = st.columns(4)
-        with col_a:
-            if st.button("🏛️ 人文古迹"):
-                preferences = "喜欢人文古迹，参观博物馆和历史景点"
-        with col_b:
-            if st.button("🏔️ 自然风光"):
-                preferences = "喜欢自然风光，爬山看风景"
-        with col_c:
-            if st.button("🍜 美食之旅"):
-                preferences = "美食之旅，想尝当地特色小吃"
-        with col_d:
-            if st.button("👨‍👩‍👧 亲子游"):
-                preferences = "亲子游，带小孩，需要适合儿童的活动"
-
-        st.divider()
 
         submitted = st.form_submit_button(
             "🚀 生成攻略",
