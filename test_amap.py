@@ -34,7 +34,7 @@ col1, col2 = st.columns(2)
 with col1:
     origin_city = st.text_input("出发地", value="北京", placeholder="例如：北京、上海")
 with col2:
-    dest_city = st.text_input("目的地", value="上海", placeholder="例如：北京、上海")
+    dest_city = st.text_input("目的地", value="承德", placeholder="例如：北京、上海")
 
 # 功能选项
 test_option = st.radio("选择测试功能", ["获取城市 adcode", "驾车路线规划", "实时交通态势"])
@@ -81,6 +81,7 @@ CITY_COORDINATES = {
     "大连": "121.614682,38.914003",
     "苏州": "120.585315,31.298886",
     "桂林": "110.290175,25.274215",
+    "承德": "117.963678,40.951069",
 }
 
 if st.button("🚀 开始测试", type="primary"):
