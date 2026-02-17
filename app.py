@@ -438,12 +438,18 @@ def render_guide(guide_data: Dict[str, Any]):
 
     st.divider()
 
-    # ==================== 原有操作按钮 ====================
-    col1, col2, col3 = st.columns(3)
+    # ==================== 复制攻略功能 ====================
+    if "show_copy_area" not in st.session_state:
+        st.session_state.show_copy_area = False
 
-    with col1:
-        if st.button("📋 复制攻略", use_container_width=True, key="copy_guide_btn"):
-            # 格式化攻略内容（纯文本格式）
+    if st.button("📋 复制攻略", use_container_width=True, key="copy_guide_btn"):
+        st.session_state.show_copy_area = True
+        st.rerun()
+
+    # 显示可复制的文本区域
+    if st.session_state.show_copy_area:
+        with st.expander("📋 点击下方文本框，然后 Ctrl+C 复制", expanded=True):
+            # 格式化攻略内容
             copy_text = f"# {guide_data.get('destination', '')}旅游攻略\n\n"
 
             # 添加天气信息
@@ -453,41 +459,38 @@ def render_guide(guide_data: Dict[str, Any]):
             # 添加攻略内容
             copy_text += guide_data.get('content', '')
 
-            # 使用 JavaScript 复制到剪贴板
-            # 使用 json.dumps 确保 JavaScript 字符串正确转义
-            escaped_text = json.dumps(copy_text, ensure_ascii=False)
-            copy_js = f"""
-            <script>
-            (function() {{
-                const text = {escaped_text};
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-999999px';
-                textArea.style.top = '-999999px';
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {{
-                    document.execCommand('copy');
-                    console.log('复制成功');
-                }} catch (err) {{
-                    console.error('复制失败:', err);
-                }}
-                document.body.removeChild(textArea);
-            }})();
-            </script>
-            """
-            components.html(copy_js, height=0, width=0)
-            st.success("✅ 攻略已复制到剪贴板！")
-            st.balloons()
+            # 显示在文本区域中
+            st.text_area(
+                "攻略内容",
+                value=copy_text,
+                height=300,
+                key="copy_text_area",
+                help="点击文本框后，使用 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制"
+            )
 
-    with col2:
+        col_close, col_done = st.columns(2)
+        with col_close:
+            if st.button("关闭", use_container_width=True):
+                st.session_state.show_copy_area = False
+                st.rerun()
+        with col_done:
+            if st.button("✅ 已复制", use_container_width=True):
+                st.session_state.show_copy_area = False
+                st.success("✅ 复制成功！")
+                st.balloons()
+                st.rerun()
+
+    st.divider()
+
+    # ==================== 原有操作按钮 ====================
+    col1, col2 = st.columns(2)
+
+    with col1:
         if st.button("🔄 重新生成", use_container_width=True):
             st.session_state.current_guide = None
             st.rerun()
 
-    with col3:
+    with col2:
         if st.button("🆕 新需求", use_container_width=True):
             st.session_state.current_guide = None
             st.session_state.last_destination = ""
