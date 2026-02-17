@@ -444,11 +444,16 @@ def render_guide(guide_data: Dict[str, Any]):
         copy_text += f"{guide_data['weather_info']}\n\n"
     copy_text += guide_data.get('content', '')
 
-    # 一键复制按钮
-    if st.button("📋 复制攻略到剪贴板", use_container_width=True):
-        st.copy_to_clipboard(copy_text)
-        st.success("✅ 已复制！可直接粘贴到微信")
-        st.balloons()
+    # 显示攻略内容供复制
+    with st.expander("📋 点击复制攻略内容", expanded=False):
+        st.text_area(
+            "攻略内容",
+            value=copy_text,
+            height=200,
+            key="guide_copy_area",
+            label_visibility="collapsed"
+        )
+        st.caption("💡 选中内容后按 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制")
 
     st.divider()
 
