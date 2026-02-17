@@ -17,30 +17,65 @@ class AmapClient:
     # 高德地图 API 端点
     BASE_URL = "https://restapi.amap.com"
 
-    # 中国主要城市高德 adcode 映射表
-    CITY_ADCODE_MAP = {
+    # 中国主要城市经纬度坐标映射表 (经度,纬度)
+    CITY_COORDINATES_MAP = {
         # 直辖市
-        "北京": "110000", "上海": "310000", "天津": "120000", "重庆": "500000",
+        "北京": (116.407526, 39.904030),
+        "上海": (121.473701, 31.230416),
+        "天津": (117.190182, 39.125596),
+        "重庆": (106.504962, 29.533155),
 
         # 省会及主要城市
-        "石家庄": "130100", "太原": "140100", "呼和浩特": "150100",
-        "沈阳": "210100", "长春": "220100", "哈尔滨": "230100",
-        "南京": "320100", "杭州": "330100", "合肥": "340100",
-        "福州": "350100", "南昌": "360100", "济南": "370100",
-        "郑州": "410100", "武汉": "420100", "长沙": "430100",
-        "广州": "440100", "南宁": "450100", "海口": "460100",
-        "成都": "510100", "贵阳": "520100", "昆明": "530100",
-        "拉萨": "540100", "西安": "610100", "兰州": "620100",
-        "西宁": "630100", "银川": "640100", "乌鲁木齐": "650100",
+        "石家庄": (114.502461, 38.045474),
+        "太原": (112.549248, 37.857014),
+        "呼和浩特": (111.670801, 40.818311),
+        "沈阳": (123.298195, 41.836753),
+        "长春": (125.323544, 43.817071),
+        "哈尔滨": (126.534967, 45.803775),
+        "南京": (118.767413, 32.041544),
+        "杭州": (120.153576, 30.287459),
+        "合肥": (117.227239, 31.820586),
+        "福州": (119.296531, 26.074508),
+        "南昌": (115.857962, 28.682892),
+        "济南": (117.000923, 36.675807),
+        "郑州": (113.625368, 34.746599),
+        "武汉": (114.298572, 30.584355),
+        "长沙": (112.938814, 28.228209),
+        "广州": (113.264385, 23.129110),
+        "南宁": (108.366543, 22.817002),
+        "海口": (110.199889, 20.017756),
+        "成都": (104.066541, 30.572269),
+        "贵阳": (106.630153, 26.647661),
+        "昆明": (102.832891, 24.880095),
+        "拉萨": (91.132212, 29.660361),
+        "西安": (108.948024, 34.263161),
+        "兰州": (103.834303, 36.061089),
+        "西宁": (101.778228, 36.617144),
+        "银川": (106.230909, 38.487193),
+        "乌鲁木齐": (87.616848, 43.825592),
 
         # 热门旅游城市
-        "三亚": "460200", "厦门": "350200", "青岛": "370200",
-        "大连": "210200", "苏州": "320500", "桂林": "450300",
-        "丽江": "530700", "黄山": "341000", "张家界": "430800",
-        "九寨沟": "513221", "敦煌": "620981", "承德": "130800",
-        "北戴河": "130304", "山海关": "130303", "五台山": "130921",
-        "平遥": "140728", "开封": "410200", "洛阳": "410300",
-        "泰山": "370911", "曲阜": "370881", "连云港": "320700",
+        "三亚": (109.511909, 18.252847),
+        "厦门": (118.089425, 24.479833),
+        "青岛": (120.382631, 36.067108),
+        "大连": (121.614682, 38.914003),
+        "苏州": (120.585315, 31.298886),
+        "桂林": (110.290175, 25.274215),
+        "丽江": (100.229068, 26.875353),
+        "黄山": (118.317765, 29.709231),
+        "张家界": (110.479146, 29.117094),
+        "九寨沟": (103.914864, 33.254381),
+        "敦煌": (94.661965, 40.142118),
+        "承德": (117.963678, 40.951069),
+        "北戴河": (119.488617, 39.818945),
+        "山海关": (119.789459, 39.867708),
+        "五台山": (113.496668, 38.849429),
+        "平遥": (112.188833, 37.195556),
+        "开封": (114.307483, 34.797108),
+        "洛阳": (112.433713, 34.668480),
+        "泰山": (117.101341, 36.254277),
+        "曲阜": (117.004289, 35.600359),
+        "连云港": (119.221611, 34.596636),
     }
 
     def __init__(self, api_key: str = None):
@@ -63,47 +98,50 @@ class AmapClient:
         else:
             logger.warning("高德地图 API Key 未配置")
 
-    def get_city_adcode(self, city_name: str) -> Optional[str]:
+    def get_city_coordinates(self, city_name: str) -> Optional[tuple]:
         """
-        获取城市的 adcode
+        获取城市的经纬度坐标
 
         Args:
             city_name: 城市名称
 
         Returns:
-            城市 adcode 或 None
+            (经度, 纬度) 或 None
         """
         # 直接查询映射表
-        if city_name in self.CITY_ADCODE_MAP:
-            return self.CITY_ADCODE_MAP[city_name]
+        if city_name in self.CITY_COORDINATES_MAP:
+            return self.CITY_COORDINATES_MAP[city_name]
 
         # 模糊匹配
         city_clean = city_name.replace("市", "").replace("省", "")
-        if city_clean in self.CITY_ADCODE_MAP:
-            return self.CITY_ADCODE_MAP[city_clean]
+        if city_clean in self.CITY_COORDINATES_MAP:
+            return self.CITY_COORDINATES_MAP[city_clean]
 
         # 如果映射表没有，尝试通过 API 查询
         if self.api_key:
             try:
                 params = {
                     "key": self.api_key,
-                    "keywords": city_name,
-                    "subdistrict": "0"
+                    "address": city_name,
+                    "city": city_name
                 }
                 response = requests.get(
-                    f"{self.BASE_URL}/v3/config/district",
+                    f"{self.BASE_URL}/v3/geocode/geo",
                     params=params,
                     timeout=10
                 )
 
                 if response.status_code == 200:
                     data = response.json()
-                    if data.get("status") == "1" and data.get("districts"):
-                        return data["districts"][0].get("adcode")
+                    if data.get("status") == "1" and data.get("geocodes"):
+                        location = data["geocodes"][0].get("location")
+                        if location:
+                            lng, lat = location.split(",")
+                            return (float(lng), float(lat))
             except Exception as e:
-                logger.error(f"通过 API 获取城市 adcode 失败: {e}")
+                logger.error(f"通过 API 获取城市坐标失败: {e}")
 
-        logger.warning(f"未找到城市 {city_name} 的 adcode")
+        logger.warning(f"未找到城市 {city_name} 的坐标")
         return None
 
     def get_driving_route(
@@ -133,21 +171,25 @@ class AmapClient:
             }
 
         try:
-            # 先获取城市的 adcode
-            origin_adcode = self.get_city_adcode(origin)
-            dest_adcode = self.get_city_adcode(destination)
+            # 获取城市经纬度坐标
+            origin_coords = self.get_city_coordinates(origin)
+            dest_coords = self.get_city_coordinates(destination)
 
-            if not origin_adcode or not dest_adcode:
+            if not origin_coords or not dest_coords:
                 return {
                     "success": False,
-                    "error": f"无法获取城市编码: {origin} -> {destination}"
+                    "error": f"无法获取城市坐标: {origin} -> {destination}"
                 }
+
+            # 格式化坐标为 "经度,纬度"
+            origin_str = f"{origin_coords[0]},{origin_coords[1]}"
+            dest_str = f"{dest_coords[0]},{dest_coords[1]}"
 
             # 调用驾车路径规划 API
             params = {
                 "key": self.api_key,
-                "origin": origin_adcode,
-                "destination": dest_adcode,
+                "origin": origin_str,
+                "destination": dest_str,
                 "strategy": strategy,
                 "extensions": "all"  # 返回详细信息
             }
@@ -176,7 +218,7 @@ class AmapClient:
 
             return {
                 "success": False,
-                "error": f"API 调用失败: {response.status_code}"
+                "error": f"API 调用失败: {response.status_code} - {data.get('info', '未知错误')}"
             }
 
         except Exception as e:
@@ -208,23 +250,26 @@ class AmapClient:
             }
 
         try:
-            adcode = self.get_city_adcode(city_name)
-            if not adcode:
+            # 获取城市坐标
+            coords = self.get_city_coordinates(city_name)
+            if not coords:
                 return {
                     "success": False,
                     "error": f"未找到城市: {city_name}"
                 }
 
+            # 如果没有指定矩形范围，创建一个围绕城市的矩形（约 0.2 度范围）
+            if not rectangle:
+                lng, lat = coords
+                # 创建一个围绕城市中心的矩形（约 20km 范围）
+                rectangle = f"{lng-0.1},{lat-0.1},{lng+0.1},{lat+0.1}"
+
             # 调用交通态势 API
             params = {
                 "key": self.api_key,
-                "city": adcode,
+                "rectangle": rectangle,
                 "level": "5"  # 道路等级
             }
-
-            # 如果指定了矩形范围
-            if rectangle:
-                params["rectangle"] = rectangle
 
             response = requests.get(
                 f"{self.BASE_URL}/v3/traffic/status/rectangle",
@@ -250,7 +295,7 @@ class AmapClient:
 
             return {
                 "success": False,
-                "error": f"API 调用失败: {response.status_code}"
+                "error": f"API 调用失败: {response.status_code} - {data.get('info', '未知错误')}"
             }
 
         except Exception as e:

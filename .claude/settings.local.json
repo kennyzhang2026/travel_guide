@@ -10,7 +10,10 @@
       "Bash(pip show:*)",
       "Bash(git remote add:*)",
       "Bash(git push:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(git checkout:*)",
+      "Bash(streamlit run:*)",
+      "Bash(git merge:*)"
     ]
   }
 }
