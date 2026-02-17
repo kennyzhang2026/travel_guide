@@ -6,7 +6,7 @@
 import json
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
-from utils.config import get_setting
+from utils.config import Config
 
 
 class BookingClient:
@@ -20,7 +20,10 @@ class BookingClient:
         """延迟获取 AI 客户端"""
         if self.ai_client is None:
             from clients.ai_client import AIClient
-            self.ai_client = AIClient()
+            self.ai_client = AIClient(
+                api_key=Config.DEEPSEEK_API_KEY,
+                base_url=Config.DEEPSEEK_BASE_URL
+            )
         return self.ai_client
 
     def get_booking_info(
