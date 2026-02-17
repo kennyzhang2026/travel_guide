@@ -29,6 +29,9 @@ class Config:
     # 天气 API 配置
     WEATHER_API_KEY: str = ""
 
+    # 高德地图配置
+    AMAP_API_KEY: str = ""
+
     @classmethod
     def load(cls) -> bool:
         """
@@ -56,6 +59,9 @@ class Config:
 
                 # 天气 API
                 cls.WEATHER_API_KEY = secrets.get("WEATHER_API_KEY", "")
+
+                # 高德地图
+                cls.AMAP_API_KEY = secrets.get("AMAP_API_KEY", "")
 
                 logger.info("配置从 Streamlit secrets 加载成功")
                 return cls.validate()
@@ -89,6 +95,9 @@ class Config:
 
         # 天气 API
         cls.WEATHER_API_KEY = os.getenv("WEATHER_API_KEY", "")
+
+        # 高德地图
+        cls.AMAP_API_KEY = os.getenv("AMAP_API_KEY", "")
 
         logger.info("配置从环境变量加载")
         return cls.validate()
@@ -143,6 +152,7 @@ class Config:
             "feishu_request_tokens": bool(cls.FEISHU_APP_TOKEN_REQUEST and cls.FEISHU_TABLE_ID_REQUEST),
             "feishu_guide_tokens": bool(cls.FEISHU_APP_TOKEN_GUIDE and cls.FEISHU_TABLE_ID_GUIDE),
             "weather_api_key": bool(cls.WEATHER_API_KEY),
+            "amap_api_key": bool(cls.AMAP_API_KEY),
         }
 
     @classmethod

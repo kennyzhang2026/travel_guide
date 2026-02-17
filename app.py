@@ -10,7 +10,7 @@ from typing import Dict, Any
 import uuid
 
 # 导入客户端和工具
-from clients import AIClient, WeatherClient, FeishuClient
+from clients import AIClient, WeatherClient, FeishuClient, create_amap_client
 from utils import Config, PromptTemplates
 
 # 配置日志
@@ -72,10 +72,16 @@ def init_clients(config):
         if config.WEATHER_API_KEY:
             weather_client = WeatherClient.create(config.WEATHER_API_KEY, provider="qweather")
 
+        # 高德地图客户端 (v2.2.0)
+        amap_client = None
+        if config.AMAP_API_KEY:
+            amap_client = create_amap_client(config.AMAP_API_KEY)
+
         return {
             "ai": ai_client,
             "feishu": feishu_client,
-            "weather": weather_client
+            "weather": weather_client,
+            "amap": amap_client
         }, True
     except Exception as e:
         logger.error(f"客户端初始化失败: {e}")
@@ -102,6 +108,12 @@ def render_sidebar():
                     st.success("✅ 天气 API 已启用")
                 else:
                     st.info("ℹ️ 天气 API 未配置")
+
+                # 高德地图 API 状态 (v2.2.0)
+                if clients.get('amap'):
+                    st.success("✅ 高德地图 API 已启用")
+                else:
+                    st.info("ℹ️ 高德地图 API 未配置")
 
                 # 飞书连接状态
                 if 'feishu' in clients:
@@ -267,6 +279,22 @@ def generate_guide(request_data: Dict[str, Any], clients: Dict[str, Any]) -> Dic
                 logger.warning(f"获取天气信息失败: {e}")
                 weather_info = ""
 
+    # 1.5. 获取交通信息 (v2.2.0)
+    traffic_info = ""
+    origin = request_data.get('origin', request_data['destination'])
+    destination = request_data['destination']
+    if origin != destination and clients.get('amap'):
+        with st.spinner("🚗 正在获取交通信息..."):
+            try:
+                amap_client = clients['amap']
+                traffic_info = amap_client.format_traffic_for_guide(
+                    origin=origin,
+                    destination=destination
+                )
+            except Exception as e:
+                logger.warning(f"获取交通信息失败: {e}")
+                traffic_info = ""
+
     # 2. 生成攻略
     progress_bar = st.progress(0)
     status_text = st.empty()
@@ -279,6 +307,7 @@ def generate_guide(request_data: Dict[str, Any], clients: Dict[str, Any]) -> Dic
         result = ai_client.generate_guide(
             user_request=request_data,
             weather_info=weather_info,
+            traffic_info=traffic_info,
             model="deepseek-chat",
             temperature=0.7,
             max_tokens=8000
@@ -314,7 +343,8 @@ def generate_guide(request_data: Dict[str, Any], clients: Dict[str, Any]) -> Dic
                     "success": True,
                     "guide_id": guide_id,
                     "content": guide_content,
-                    "weather_info": weather_info
+                    "weather_info": weather_info,
+                    "traffic_info": traffic_info
                 }
             except Exception as e:
                 logger.error(f"保存到飞书失败: {e}")
@@ -325,6 +355,7 @@ def generate_guide(request_data: Dict[str, Any], clients: Dict[str, Any]) -> Dic
                     "guide_id": guide_id,
                     "content": guide_content,
                     "weather_info": weather_info,
+                    "traffic_info": traffic_info,
                     "warning": "攻略生成成功，但保存到飞书失败"
                 }
         else:
@@ -358,6 +389,11 @@ def render_guide(guide_data: Dict[str, Any]):
     if guide_data.get('weather_info'):
         with st.expander("🌤️ 天气信息", expanded=True):
             st.markdown(guide_data['weather_info'])
+
+    # 显示交通信息 (v2.2.0)
+    if guide_data.get('traffic_info'):
+        with st.expander("🚗 交通信息", expanded=True):
+            st.markdown(guide_data['traffic_info'])
 
     st.divider()
 
@@ -442,6 +478,8 @@ def render_guide(guide_data: Dict[str, Any]):
     copy_text = f"# {guide_data.get('destination', '')}旅游攻略\n\n"
     if guide_data.get('weather_info'):
         copy_text += f"{guide_data['weather_info']}\n\n"
+    if guide_data.get('traffic_info'):
+        copy_text += f"{guide_data['traffic_info']}\n\n"
     copy_text += guide_data.get('content', '')
 
     # 显示攻略内容供复制

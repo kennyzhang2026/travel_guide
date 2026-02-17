@@ -42,6 +42,7 @@ class AIClient:
     def generate_guide(self,
                       user_request: Dict[str, Any],
                       weather_info: Optional[str] = None,
+                      traffic_info: Optional[str] = None,
                       model: str = "deepseek-chat",
                       temperature: float = 0.7,
                       max_tokens: int = 4000) -> Dict[str, Any]:
@@ -57,6 +58,7 @@ class AIClient:
                 - budget: 预算
                 - preferences: 偏好
             weather_info: 天气信息 (可选)
+            traffic_info: 交通信息 (可选, v2.2.0)
             model: 使用的模型
             temperature: 温度参数
             max_tokens: 最大生成 token 数
@@ -75,7 +77,7 @@ class AIClient:
         system_prompt = self._build_system_prompt()
 
         # 构建用户消息
-        user_message = self._build_user_message(user_request, weather_info)
+        user_message = self._build_user_message(user_request, weather_info, traffic_info)
 
         try:
             messages = [
@@ -124,7 +126,7 @@ class AIClient:
         from utils.prompts import PromptTemplates
         return PromptTemplates.SYSTEM_PROMPT
 
-    def _build_user_message(self, user_request: Dict[str, Any], weather_info: Optional[str] = None) -> str:
+    def _build_user_message(self, user_request: Dict[str, Any], weather_info: Optional[str] = None, traffic_info: Optional[str] = None) -> str:
         """构建用户消息"""
         destination = user_request.get("destination", "")
         origin = user_request.get("origin", "")
@@ -145,6 +147,11 @@ class AIClient:
 
         if weather_info:
             message += f"\n**天气信息**:\n{weather_info}\n"
+
+        if traffic_info:
+            message += f"\n**交通信息**:\n{traffic_info}\n"
+
+        message += "\n请根据以上信息，为我生成一份详细的旅游攻略。"
 
         return message
 
