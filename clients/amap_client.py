@@ -236,6 +236,9 @@ class AmapClient:
         """
         获取实时交通态势信息
 
+        注意：高德地图实时交通态势 API 可能需要付费权限
+        如果 API 不可用，将返回通用交通建议
+
         Args:
             city_name: 城市名称
             rectangle: 查询区域（经纬度矩形范围，可选，已废弃）
@@ -258,18 +261,16 @@ class AmapClient:
                     "error": f"未找到城市: {city_name}"
                 }
 
-            # 使用圆形区域查询 API（更可靠）
+            # 使用圆形区域查询 API
             lng, lat = coords
-            # 创建一个围绕城市中心的圆形区域（半径 5000 米 = 5km）
             center = f"{lng},{lat}"
-            radius = "5000"  # 5公里半径
+            radius = "3000"  # 3公里半径
 
             # 调用交通态势 API（圆形区域）
             params = {
                 "key": self.api_key,
                 "center": center,
-                "radius": radius,
-                "level": "5"  # 道路等级
+                "radius": radius
             }
 
             response = requests.get(
@@ -280,7 +281,7 @@ class AmapClient:
 
             if response.status_code == 200:
                 data = response.json()
-                if data.get("status") == "1":
+                if data.get("status") == "1" and data.get("trafficinfo"):
                     # 解析交通状态
                     traffic_data = data.get("trafficinfo", {})
                     evaluation = traffic_data.get("evaluation", {})
@@ -293,17 +294,24 @@ class AmapClient:
                         "speed": float(evaluation.get("speed", 0)),                 # 平均速度(km/h)
                         "status": evaluation.get("status", "未知")                   # 交通状态
                     }
+                else:
+                    # API 返回错误，可能是权限问题
+                    logger.info(f"交通态势 API 返回错误: {data.get('info', '未知')}")
+                    return {
+                        "success": False,
+                        "error": "实时交通服务暂不可用（可能需要付费权限）"
+                    }
 
             return {
                 "success": False,
-                "error": f"API 调用失败: {response.status_code} - {data.get('info', '未知错误')}"
+                "error": "实时交通服务暂不可用"
             }
 
         except Exception as e:
-            logger.error(f"获取交通态势失败: {e}")
+            logger.info(f"获取交通态势失败: {e}")
             return {
                 "success": False,
-                "error": str(e)
+                "error": "实时交通服务暂不可用"
             }
 
     def format_traffic_for_guide(
@@ -343,9 +351,17 @@ class AmapClient:
             lines.append(f"   🚗 平均速度: {traffic_result['speed']:.1f} km/h")
             lines.append(f"   📈 交通状态: {traffic_result['status']}")
             lines.append("")
+        else:
+            # 实时路况不可用，提供通用建议
+            if route_result["success"]:
+                lines.append("📍 交通提示:")
+                lines.append(f"   ℹ️ 出发前建议使用导航软件查看实时路况")
+                lines.append(f"   • 避开早晚高峰 (7:00-9:00, 17:00-19:00)")
+                lines.append(f"   • 预计行程 {route_result['duration']} 分钟，建议合理安排时间")
+                lines.append("")
 
-        # 如果没有配置 API Key 或获取失败，提供通用建议
-        if not route_result["success"] and not traffic_result["success"]:
+        # 如果路线规划也失败，提供通用建议
+        if not route_result["success"]:
             lines.append("💡 交通建议:")
             lines.append(f"   • 从 {origin} 到 {destination}，建议提前规划路线")
             lines.append("   • 可使用高德地图、百度地图等导航软件获取实时路况")

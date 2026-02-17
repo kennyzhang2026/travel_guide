@@ -183,18 +183,18 @@ if st.button("🚀 开始测试", type="primary"):
                         # 使用圆形查询
                         lng, lat = coords.split(",")
                         center = f"{lng},{lat}"
-                        radius = "5000"  # 5公里半径
+                        radius = "3000"  # 3公里半径
 
                         st.info(f"城市坐标: `{coords}`")
                         st.info(f"查询中心: `{center}`")
                         st.info(f"查询半径: `{radius}` 米")
+                        st.info("💡 提示：高德地图实时交通态势 API 可能需要付费权限")
 
                         url = f"{BASE_URL}/v3/traffic/status/circle"
                         params = {
                             "key": amap_key,
                             "center": center,
-                            "radius": radius,
-                            "level": "5"
+                            "radius": radius
                         }
                         response = requests.get(url, params=params, timeout=10)
 
@@ -204,7 +204,7 @@ if st.button("🚀 开始测试", type="primary"):
                             data = response.json()
                             st.json(data)
 
-                            if data.get("status") == "1":
+                            if data.get("status") == "1" and data.get("trafficinfo"):
                                 traffic_data = data.get("trafficinfo", {})
                                 evaluation = traffic_data.get("evaluation", {})
 
@@ -217,8 +217,19 @@ if st.button("🚀 开始测试", type="primary"):
                                     st.metric("拥堵等级", evaluation.get('description', '未知'))
                                 with col_c:
                                     st.metric("平均速度", f"{evaluation.get('speed', 0):.1f} km/h")
+
+                                st.info("🎉 如果您看到了拥堵数据，说明您的高德 API Key 支持实时交通服务！")
                             else:
-                                st.error(f"❌ 交通态势查询失败: {data.get('info')}")
+                                st.warning(f"⚠️ 交通态势查询失败: {data.get('info', '未知错误')}")
+                                st.info("""
+                                💡 这通常是因为：
+                                - 高德地图实时交通态势 API 需要付费权限
+                                - 或者 API Key 类型不对（需要 Web 服务类型）
+
+                                ✅ 好消息是：
+                                - 路线规划功能完全可用
+                                - 主应用会基于路线信息提供交通建议
+                                """)
                         else:
                             st.error(f"❌ HTTP 请求失败")
 
