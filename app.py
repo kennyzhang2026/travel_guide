@@ -4,10 +4,12 @@
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any
 import uuid
+import json
 
 # 导入客户端和工具
 from clients import AIClient, WeatherClient, FeishuClient
@@ -440,8 +442,45 @@ def render_guide(guide_data: Dict[str, Any]):
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("📋 复制攻略", use_container_width=True):
-            st.info("请手动复制上方攻略内容")
+        if st.button("📋 复制攻略", use_container_width=True, key="copy_guide_btn"):
+            # 格式化攻略内容（纯文本格式）
+            copy_text = f"# {guide_data.get('destination', '')}旅游攻略\n\n"
+
+            # 添加天气信息
+            if guide_data.get('weather_info'):
+                copy_text += f"{guide_data['weather_info']}\n\n"
+
+            # 添加攻略内容
+            copy_text += guide_data.get('content', '')
+
+            # 使用 JavaScript 复制到剪贴板
+            # 使用 json.dumps 确保 JavaScript 字符串正确转义
+            escaped_text = json.dumps(copy_text, ensure_ascii=False)
+            copy_js = f"""
+            <script>
+            (function() {{
+                const text = {escaped_text};
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {{
+                    document.execCommand('copy');
+                    console.log('复制成功');
+                }} catch (err) {{
+                    console.error('复制失败:', err);
+                }}
+                document.body.removeChild(textArea);
+            }})();
+            </script>
+            """
+            components.html(copy_js, height=0, width=0)
+            st.success("✅ 攻略已复制到剪贴板！")
+            st.balloons()
 
     with col2:
         if st.button("🔄 重新生成", use_container_width=True):
