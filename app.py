@@ -68,9 +68,9 @@ def init_clients(config):
         )
 
         weather_client = None
+        # 天气功能 - 支持和风天气和 OpenWeatherMap
         if config.WEATHER_API_KEY:
-            # 使用 OpenWeatherMap（推荐）
-            weather_client = WeatherClient.create(config.WEATHER_API_KEY, provider="openweather")
+            weather_client = WeatherClient.create(config.WEATHER_API_KEY, provider="qweather")
 
         return {
             "ai": ai_client,
