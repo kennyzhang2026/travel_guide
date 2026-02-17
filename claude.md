@@ -181,9 +181,10 @@ travel_guide/
 - [x] WEATHER_API_KEY (和风天气)
 
 **版本信息**:
-- 当前版本: v0.3.0
+- 当前版本: v0.3.0 (MVP 稳定版)
 - 发布日期: 2026-02-17
 - GitHub: https://github.com/kennyzhang2026/travel_guide
+- 部署状态: ✅ 已部署到 Streamlit Cloud，支持手机端访问
 
 ### Streamlit Cloud 部署说明
 
