@@ -179,18 +179,20 @@ if st.button("🚀 开始测试", type="primary"):
                     if not coords:
                         st.error(f"❌ 城市不在映射表中，请选择其他城市")
                     else:
-                        # 创建围绕城市的矩形
+                        # 使用圆形查询
                         lng, lat = coords.split(",")
-                        lng, lat = float(lng), float(lat)
-                        rectangle = f"{lng-0.1},{lat-0.1},{lng+0.1},{lat+0.1}"
+                        center = f"{lng},{lat}"
+                        radius = "5000"  # 5公里半径
 
                         st.info(f"城市坐标: `{coords}`")
-                        st.info(f"查询矩形: `{rectangle}`")
+                        st.info(f"查询中心: `{center}`")
+                        st.info(f"查询半径: `{radius}` 米")
 
-                        url = f"{BASE_URL}/v3/traffic/status/rectangle"
+                        url = f"{BASE_URL}/v3/traffic/status/circle"
                         params = {
                             "key": amap_key,
-                            "rectangle": rectangle,
+                            "center": center,
+                            "radius": radius,
                             "level": "5"
                         }
                         response = requests.get(url, params=params, timeout=10)

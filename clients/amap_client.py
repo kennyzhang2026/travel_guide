@@ -238,7 +238,7 @@ class AmapClient:
 
         Args:
             city_name: 城市名称
-            rectangle: 查询区域（经纬度矩形范围，可选）
+            rectangle: 查询区域（经纬度矩形范围，可选，已废弃）
 
         Returns:
             交通态势信息
@@ -258,21 +258,22 @@ class AmapClient:
                     "error": f"未找到城市: {city_name}"
                 }
 
-            # 如果没有指定矩形范围，创建一个围绕城市的矩形（约 0.2 度范围）
-            if not rectangle:
-                lng, lat = coords
-                # 创建一个围绕城市中心的矩形（约 20km 范围）
-                rectangle = f"{lng-0.1},{lat-0.1},{lng+0.1},{lat+0.1}"
+            # 使用圆形区域查询 API（更可靠）
+            lng, lat = coords
+            # 创建一个围绕城市中心的圆形区域（半径 5000 米 = 5km）
+            center = f"{lng},{lat}"
+            radius = "5000"  # 5公里半径
 
-            # 调用交通态势 API
+            # 调用交通态势 API（圆形区域）
             params = {
                 "key": self.api_key,
-                "rectangle": rectangle,
+                "center": center,
+                "radius": radius,
                 "level": "5"  # 道路等级
             }
 
             response = requests.get(
-                f"{self.BASE_URL}/v3/traffic/status/rectangle",
+                f"{self.BASE_URL}/v3/traffic/status/circle",
                 params=params,
                 timeout=10
             )
