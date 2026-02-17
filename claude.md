@@ -154,21 +154,20 @@ travel_guide/
 总计   ███████████░░░░░░░░░░  65%
 ```
 
-### 最新更新 (2026-02-16)
+### 最新更新 (2026-02-17)
 
 **新增功能**:
 - ✨ 攻略优化功能：用户可对已生成攻略进行针对性改进
-- 🌤️ OpenWeatherMap 天气支持：更稳定可靠的天气 API
-- 🔧 飞书存储修复：解决日期和多选字段格式问题
+- 🌤️ 和风天气API支持：修正API路径，天气功能现已可用
 
 **Bug 修复**:
-- 修复飞书用户需求保存失败（日期字段需 Unix 时间戳）
-- 修复飞书 preferences 字段错误（多选字段需列表格式）
-- 改进错误日志，便于问题诊断
+- 修复和风天气城市查询API路径：`/geo/v2/city/lookup`
+- 修复天气客户端提供商配置：使用 `qweather` 替代 `openweather`
+- 验证专属端点同时支持城市查询和天气查询
 
 ### 下一步行动
 
-1. **用户操作**: 测试应用功能，获取 OpenWeatherMap API Key
+1. **用户操作**: 测试应用功能
 2. **开发任务**: 阶段五 - 高级功能开发（可选）
 
 ### 配置清单
@@ -177,11 +176,11 @@ travel_guide/
 - [x] DEEPSEEK_API_KEY
 - [x] FEISHU_APP_ID / FEISHU_APP_SECRET
 - [x] 飞书多维表格 tokens (4个)
+- [x] WEATHER_API_KEY (和风天气)
 
-**🔄 待配置** (可选):
-- [ ] WEATHER_API_KEY (OpenWeatherMap - 推荐使用)
-  - 访问 https://openweathermap.org/api 注册免费账号
-  - 每天 1000 次免费请求，城市名使用英文（如 Beijing, Shanghai）
+**版本信息**:
+- 当前版本: v0.2.1
+- 发布日期: 2026-02-17
 
 ### 飞书配置获取指南
 
