@@ -121,27 +121,8 @@ class AIClient:
 
     def _build_system_prompt(self) -> str:
         """构建系统提示词"""
-        return """你是一位专业的旅游规划助手，擅长为用户制定个性化、实用的旅行攻略。
-
-请根据用户的需求，生成一份详细的旅游攻略，包含以下内容：
-
-## 攻略结构
-1. **行程概览** - 简要介绍整体行程安排
-2. **景点推荐** - 重点景点介绍、门票信息、免费/优惠套餐
-3. **停车信息** - 推荐停车位置、停车费用
-4. **美食推荐** - 当地特色饮食、推荐餐厅
-5. **住宿推荐** - 根据预算推荐住宿地点
-6. **天气穿衣** - 根据天气信息给出穿衣建议
-7. **交通规划** - 从出发地到目的地的交通方式
-
-## 输出要求
-- 内容详实、条理清晰
-- 考虑用户的预算和偏好
-- 提供实用的 Tips 和建议
-- 使用 Markdown 格式排版
-- 适当使用 emoji 增强可读性
-
-请以友好、专业的语气回复，让用户的旅行更加顺利愉快！"""
+        from utils.prompts import PromptTemplates
+        return PromptTemplates.SYSTEM_PROMPT
 
     def _build_user_message(self, user_request: Dict[str, Any], weather_info: Optional[str] = None) -> str:
         """构建用户消息"""
@@ -209,3 +190,80 @@ class AIClient:
         except Exception as e:
             logger.error(f"对话请求失败: {e}")
             return {"success": False, "error": str(e), "content": None}
+
+    def generate_pitfall_guide(self,
+                               destination: str,
+                               preferences: str = "",
+                               model: str = "deepseek-chat",
+                               temperature: float = 0.7,
+                               max_tokens: int = 2000) -> Dict[str, Any]:
+        """
+        生成目的地避坑指南
+
+        Args:
+            destination: 目的地城市/地区
+            preferences: 用户偏好（可选）
+            model: 使用的模型
+            temperature: 温度参数
+            max_tokens: 最大生成 token 数
+
+        Returns:
+            Dict 包含生成的避坑指南或错误信息
+        """
+        if not self.client:
+            return {
+                "success": False,
+                "error": "AI 客户端未初始化，请检查 API Key",
+                "content": None
+            }
+
+        # 从 PromptTemplates 获取避坑指南提示词
+        from utils.prompts import PromptTemplates
+        system_prompt = PromptTemplates.PITFALL_PROMPT
+
+        # 构建用户消息
+        user_message = f"请为 {destination} 生成一份详细的旅游避坑指南。"
+        if preferences:
+            user_message += f"\n\n用户偏好：{preferences}"
+
+        try:
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ]
+
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                stream=False
+            )
+
+            content = response.choices[0].message.content
+
+            logger.info(f"避坑指南生成成功，token 使用: {response.usage.total_tokens}")
+
+            return {
+                "success": True,
+                "content": content,
+                "model": model,
+                "usage": {
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "completion_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.total_tokens
+                }
+            }
+
+        except openai.AuthenticationError as e:
+            logger.error(f"认证失败: {e}")
+            return {"success": False, "error": f"API Key 认证失败", "content": None}
+        except openai.RateLimitError as e:
+            logger.error(f"请求频率限制: {e}")
+            return {"success": False, "error": f"请求频率超限", "content": None}
+        except openai.APIConnectionError as e:
+            logger.error(f"网络连接错误: {e}")
+            return {"success": False, "error": f"网络连接错误", "content": None}
+        except Exception as e:
+            logger.error(f"生成避坑指南时出错: {e}")
+            return {"success": False, "error": f"未知错误: {str(e)}", "content": None}

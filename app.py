@@ -178,20 +178,20 @@ def render_request_form():
             )
 
         with col2:
-            # 默认日期：明天开始，3天后结束
+            # 默认日期：今天出发，明天返回（2天行程，用于测试）
+            today = datetime.now().date()
             tomorrow = datetime.now() + timedelta(days=1)
-            end_date = tomorrow + timedelta(days=3)
 
             start_date = st.date_input(
                 "出发日期 *",
-                value=tomorrow,
+                value=today,
                 min_value=datetime.now().date(),
                 help="计划什么时候出发？"
             )
 
             end_date_input = st.date_input(
                 "返回日期 *",
-                value=end_date,
+                value=tomorrow.date(),
                 min_value=start_date,
                 help="计划什么时候返回？"
             )
@@ -200,7 +200,7 @@ def render_request_form():
             "预算 (元) *",
             min_value=0,
             max_value=1000000,
-            value=3000,
+            value=500,
             step=100,
             help="这次旅行的总预算是多少？"
         )
@@ -281,7 +281,7 @@ def generate_guide(request_data: Dict[str, Any], clients: Dict[str, Any]) -> Dic
             weather_info=weather_info,
             model="deepseek-chat",
             temperature=0.7,
-            max_tokens=4000
+            max_tokens=8000
         )
 
         progress_bar.progress(80)
