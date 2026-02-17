@@ -159,15 +159,17 @@ travel_guide/
 **新增功能**:
 - ✨ 攻略优化功能：用户可对已生成攻略进行针对性改进
 - 🌤️ 和风天气API支持：修正API路径，天气功能现已可用
+- 📋 复制攻略功能：可展开文本区域复制攻略内容
 
 **Bug 修复**:
 - 修复和风天气城市查询API路径：`/geo/v2/city/lookup`
 - 修复天气客户端提供商配置：使用 `qweather` 替代 `openweather`
 - 验证专属端点同时支持城市查询和天气查询
+- 修复复制功能兼容性问题
 
 ### 下一步行动
 
-1. **用户操作**: 测试应用功能
+1. **部署准备**: Streamlit Cloud 部署
 2. **开发任务**: 阶段五 - 高级功能开发（可选）
 
 ### 配置清单
@@ -179,8 +181,30 @@ travel_guide/
 - [x] WEATHER_API_KEY (和风天气)
 
 **版本信息**:
-- 当前版本: v0.2.1
+- 当前版本: v0.3.0
 - 发布日期: 2026-02-17
+- GitHub: https://github.com/kennyzhang2026/travel_guide
+
+### Streamlit Cloud 部署说明
+
+1. 访问 [Streamlit Cloud](https://streamlit.io/cloud)
+2. 连接 GitHub 仓库：`kennyzhang2026/travel_guide`
+3. 配置环境变量（在 Secrets 中设置）：
+   - `DEEPSEEK_API_KEY`
+   - `FEISHU_APP_ID`
+   - `FEISHU_APP_SECRET`
+   - `FEISHU_APP_TOKEN_REQUEST`
+   - `FEISHU_TABLE_ID_REQUEST`
+   - `FEISHU_APP_TOKEN_GUIDE`
+   - `FEISHU_TABLE_ID_GUIDE`
+   - `WEATHER_API_KEY`
+
+4. 主文件路径：`app.py`
+
+**手机端访问**：
+- Streamlit Cloud 自动适配手机端
+- 推荐使用手机浏览器访问
+- 支持触屏操作
 
 ### 飞书配置获取指南
 
