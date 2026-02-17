@@ -4,12 +4,10 @@
 """
 
 import streamlit as st
-import streamlit.components.v1 as components
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any
 import uuid
-import json
 
 # 导入客户端和工具
 from clients import AIClient, WeatherClient, FeishuClient
@@ -436,49 +434,21 @@ def render_guide(guide_data: Dict[str, Any]):
             except Exception as e:
                 st.error(f"优化失败: {e}")
 
+
     st.divider()
 
     # ==================== 复制攻略功能 ====================
-    if "show_copy_area" not in st.session_state:
-        st.session_state.show_copy_area = False
+    # 格式化攻略内容
+    copy_text = f"# {guide_data.get('destination', '')}旅游攻略\n\n"
+    if guide_data.get('weather_info'):
+        copy_text += f"{guide_data['weather_info']}\n\n"
+    copy_text += guide_data.get('content', '')
 
-    if st.button("📋 复制攻略", use_container_width=True, key="copy_guide_btn"):
-        st.session_state.show_copy_area = True
-        st.rerun()
-
-    # 显示可复制的文本区域
-    if st.session_state.show_copy_area:
-        with st.expander("📋 点击下方文本框，然后 Ctrl+C 复制", expanded=True):
-            # 格式化攻略内容
-            copy_text = f"# {guide_data.get('destination', '')}旅游攻略\n\n"
-
-            # 添加天气信息
-            if guide_data.get('weather_info'):
-                copy_text += f"{guide_data['weather_info']}\n\n"
-
-            # 添加攻略内容
-            copy_text += guide_data.get('content', '')
-
-            # 显示在文本区域中
-            st.text_area(
-                "攻略内容",
-                value=copy_text,
-                height=300,
-                key="copy_text_area",
-                help="点击文本框后，使用 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制"
-            )
-
-        col_close, col_done = st.columns(2)
-        with col_close:
-            if st.button("关闭", use_container_width=True):
-                st.session_state.show_copy_area = False
-                st.rerun()
-        with col_done:
-            if st.button("✅ 已复制", use_container_width=True):
-                st.session_state.show_copy_area = False
-                st.success("✅ 复制成功！")
-                st.balloons()
-                st.rerun()
+    # 一键复制按钮
+    if st.button("📋 复制攻略到剪贴板", use_container_width=True):
+        st.copy_to_clipboard(copy_text)
+        st.success("✅ 已复制！可直接粘贴到微信")
+        st.balloons()
 
     st.divider()
 
