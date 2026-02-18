@@ -6,6 +6,7 @@
 import requests
 import time
 import logging
+import json
 from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
@@ -75,13 +76,18 @@ class FeishuUserClient:
 
         try:
             response = requests.request(method, url, timeout=30, **kwargs)
+            logger.debug(f"{method} {url} -> {response.status_code}")
+
             if response.status_code == 200:
                 data = response.json()
                 if data.get("code") == 0:
                     return data
                 else:
-                    logger.warning(f"API 错误: {data.get('msg')}")
-                    raise RuntimeError(f"API 错误: {data.get('msg')}")
+                    logger.warning(f"API 错误: code={data.get('code')}, msg={data.get('msg')}")
+                    raise RuntimeError(f"API 错误: {data.get('msg')} (code: {data.get('code')})")
+            else:
+                logger.warning(f"HTTP 状态码: {response.status_code}")
+                logger.warning(f"响应内容: {response.text[:500]}")
         except Exception as e:
             logger.error(f"请求失败: {e}")
             raise
@@ -198,6 +204,96 @@ class FeishuUserClient:
                 break
 
         return users
+
+    def update_user_preferences(self, username: str, preferences: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        更新用户偏好（v4.0 新增）
+
+        Args:
+            username: 用户名
+            preferences: 偏好字典，例如:
+                {
+                    "hotel": {"budget_min": 200, "budget_max": 300, "quiet": True},
+                    "meal": {"type": ["local"], "spicy_level": "medium"}
+                }
+
+        Returns:
+            操作结果 {"success": bool, "error": str}
+        """
+        # 1. 获取用户信息（包含 record_id）
+        user = self.get_user_by_username(username)
+        if not user:
+            logger.error(f"用户不存在: {username}")
+            return {"success": False, "error": "用户不存在"}
+
+        record_id = user.get("record_id")
+        if not record_id:
+            logger.error(f"无法获取 record_id: {username}")
+            return {"success": False, "error": "无法获取 record_id"}
+
+        # 2. 构建 API URL（需要 record_id）
+        base_url = self.BITABLE_URL.format(
+            app_token=self.user_app_token,
+            table_id=self.user_table_id
+        )
+        url = f"{base_url}/{record_id}"
+        logger.info(f"更新偏好 URL: {url}")
+        logger.info(f"record_id: {record_id}")
+
+        # 3. 将 preferences 转换为 JSON 字符串
+        preferences_json = json.dumps(preferences, ensure_ascii=False)
+        logger.info(f"preferences_json: {preferences_json}")
+
+        # 4. 发送 PATCH 请求
+        payload = {"fields": {"preferences": preferences_json}}
+
+        try:
+            # 飞书更新记录使用 PUT 方法
+            result = self._make_request("PUT", url, json=payload,
+                                       headers={"Content-Type": "application/json"})
+
+            if result:
+                logger.info(f"用户偏好更新成功: {username}")
+                return {"success": True}
+            else:
+                logger.error(f"用户偏好更新失败: {username}")
+                return {"success": False, "error": "更新失败：API 返回空结果"}
+
+        except RuntimeError as e:
+            error_msg = str(e)
+            logger.error(f"更新用户偏好 API 错误: {error_msg}")
+            # 提供更友好的错误提示
+            if "field not found" in error_msg.lower() or "invalid field" in error_msg.lower():
+                return {"success": False, "error": "preferences 字段不存在，请在飞书表格中添加该字段"}
+            return {"success": False, "error": f"API 错误: {error_msg}"}
+        except Exception as e:
+            logger.error(f"更新用户偏好异常: {e}")
+            return {"success": False, "error": str(e)}
+
+    def get_user_preferences(self, username: str) -> Optional[Dict[str, Any]]:
+        """
+        获取用户偏好（v4.0 新增）
+
+        Args:
+            username: 用户名
+
+        Returns:
+            偏好字典，如果不存在则返回空字典
+        """
+        user = self.get_user_by_username(username)
+        if not user:
+            return None
+
+        preferences_str = user.get("preferences")
+        if not preferences_str:
+            # 用户没有设置偏好，返回空字典
+            return {}
+
+        try:
+            return json.loads(preferences_str)
+        except json.JSONDecodeError as e:
+            logger.error(f"解析用户偏好 JSON 失败: {e}")
+            return {}
 
     # ==================== 辅助方法 ====================
 
