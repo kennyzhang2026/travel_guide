@@ -152,6 +152,9 @@ logs/
 temp/
 *.tmp
 
+# Test/development tools
+test_*.py
+
 # Sensitive data
 *credentials*
 *_config.json
