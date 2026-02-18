@@ -120,39 +120,25 @@ class FeishuUserClient:
 
     def create_user(self,
                     username: str,
-                    password_hash: str,
-                    email: str = "",
-                    role: str = "user") -> Dict[str, Any]:
+                    password_hash: str) -> Dict[str, Any]:
         """
-        创建新用户
+        创建新用户（简化版）
 
         Args:
             username: 用户名
             password_hash: 密码哈希
-            email: 邮箱（可选）
-            role: 角色（默认为 user）
 
         Returns:
-            操作结果 {"success": bool, "user_id": str, "error": str}
+            操作结果 {"success": bool, "error": str}
         """
         url = self.BITABLE_URL.format(
             app_token=self.user_app_token,
             table_id=self.user_table_id
         )
 
-        # 生成用户ID
-        user_id = str(uuid.uuid4())
-        current_timestamp = int(datetime.now().timestamp() * 1000)
-
         fields = {
-            "user_id": user_id,
             "username": username,
-            "password_hash": password_hash,
-            "email": email,
-            "role": role,
-            "status": "active",
-            "created_at": current_timestamp,
-            "last_login": 0,
+            "password": password_hash,
         }
 
         payload = {"fields": fields}
@@ -164,7 +150,6 @@ class FeishuUserClient:
             logger.info(f"用户创建成功: {username}")
             return {
                 "success": True,
-                "user_id": user_id,
                 "record_id": result.get("data", {}).get("record", {}).get("record_id")
             }
         else:
@@ -173,7 +158,7 @@ class FeishuUserClient:
 
     def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
         """
-        根据用户名获取用户信息
+        根据用户名获取用户信息（简化版）
 
         Args:
             username: 用户名
@@ -205,41 +190,9 @@ class FeishuUserClient:
             return user_data.get("fields", {})
         return None
 
-    def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
-        """
-        根据 ID 获取用户信息
-
-        Args:
-            user_id: 用户ID
-
-        Returns:
-            用户数据或 None
-        """
-        url = self.BITABLE_URL.format(
-            app_token=self.user_app_token,
-            table_id=self.user_table_id
-        )
-
-        params = {
-            "filter": json.dumps({
-                "conditions": [{
-                    "field_name": "user_id",
-                    "operator": "is",
-                    "value": [user_id]
-                }]
-            })
-        }
-
-        result = self._make_request("GET", url, params=params)
-
-        if result and result.get("data", {}).get("items"):
-            user_data = result["data"]["items"][0]
-            return user_data.get("fields", {})
-        return None
-
     def update_last_login(self, username: str) -> bool:
         """
-        更新用户最后登录时间
+        更新用户最后登录时间（简化版 - 暂不实现）
 
         Args:
             username: 用户名
@@ -247,67 +200,17 @@ class FeishuUserClient:
         Returns:
             是否成功
         """
-        # 首先获取用户的 record_id
-        url = self.BITABLE_URL.format(
-            app_token=self.user_app_token,
-            table_id=self.user_table_id
-        )
-
-        params = {
-            "filter": json.dumps({
-                "conditions": [{
-                    "field_name": "username",
-                    "operator": "is",
-                    "value": [username]
-                }]
-            })
-        }
-
-        result = self._make_request("GET", url, params=params)
-
-        if not result or not result.get("data", {}).get("items"):
-            return False
-
-        record_id = result["data"]["items"][0].get("record_id")
-        if not record_id:
-            return False
-
-        # 更新最后登录时间
-        current_timestamp = int(datetime.now().timestamp() * 1000)
-
-        url = f"{self.BITABLE_URL.format(app_token=self.user_app_token, table_id=self.user_table_id)}/{record_id}"
-
-        payload = {
-            "fields": {
-                "last_login": current_timestamp
-            }
-        }
-
-        result = self._make_request("PATCH", url, json=payload,
-                                   headers={"Content-Type": "application/json"})
-
-        return result is not None
+        # 简化版：不记录登录时间
+        return True
 
     def list_all_users(self) -> List[Dict[str, Any]]:
         """
-        获取所有用户列表
+        获取所有用户列表（简化版 - 暂不实现）
 
         Returns:
             用户列表
         """
-        url = self.BITABLE_URL.format(
-            app_token=self.user_app_token,
-            table_id=self.user_table_id
-        )
-
-        params = {
-            "page_size": 100
-        }
-
-        result = self._make_request("GET", url, params=params)
-
-        if result and result.get("data", {}).get("items"):
-            return [item.get("fields", {}) for item in result["data"]["items"]]
+        # 简化版：暂不实现
         return []
 
     def user_exists(self, username: str) -> bool:

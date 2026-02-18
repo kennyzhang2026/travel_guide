@@ -129,20 +129,16 @@ class AuthClient:
 
     def register(self,
                  username: str,
-                 password: str,
-                 email: str = "",
-                 role: str = "user") -> Dict[str, Any]:
+                 password: str) -> Dict[str, Any]:
         """
-        用户注册
+        用户注册（简化版）
 
         Args:
             username: 用户名
             password: 密码
-            email: 邮箱（可选）
-            role: 角色（默认为 user）
 
         Returns:
-            操作结果 {"success": bool, "error": str, "user_id": str}
+            操作结果 {"success": bool, "error": str}
         """
         # 验证用户名
         valid, error = self.validate_username(username)
@@ -151,11 +147,6 @@ class AuthClient:
 
         # 验证密码
         valid, error = self.validate_password(password)
-        if not valid:
-            return {"success": False, "error": error}
-
-        # 验证邮箱
-        valid, error = self.validate_email(email)
         if not valid:
             return {"success": False, "error": error}
 
@@ -169,16 +160,13 @@ class AuthClient:
         # 创建用户
         result = self.user_client.create_user(
             username=username,
-            password_hash=password_hash,
-            email=email,
-            role=role
+            password_hash=password_hash
         )
 
         if result.get("success"):
             logger.info(f"用户注册成功: {username}")
             return {
                 "success": True,
-                "user_id": result.get("user_id"),
                 "username": username
             }
         else:
@@ -187,7 +175,7 @@ class AuthClient:
 
     def login(self, username: str, password: str) -> Dict[str, Any]:
         """
-        用户登录
+        用户登录（简化版）
 
         Args:
             username: 用户名
@@ -210,30 +198,19 @@ class AuthClient:
         if not user:
             return {"success": False, "error": "用户名或密码错误"}
 
-        # 检查用户状态
-        if user.get("status") == "banned":
-            return {"success": False, "error": "该账号已被禁用"}
-
-        # 验证密码
-        password_hash = user.get("password_hash", "")
+        # 验证密码（字段名从 password_hash 改为 password）
+        password_hash = user.get("password", "")
         if not self.verify_password(password, password_hash):
             logger.warning(f"登录失败: {username} - 密码错误")
             return {"success": False, "error": "用户名或密码错误"}
 
-        # 更新最后登录时间
-        self.user_client.update_last_login(username)
-
         logger.info(f"用户登录成功: {username}")
 
-        # 返回用户信息（不包含密码哈希）
+        # 返回用户信息
         return {
             "success": True,
             "user": {
-                "user_id": user.get("user_id"),
                 "username": user.get("username"),
-                "email": user.get("email", ""),
-                "role": user.get("role", "user"),
-                "status": user.get("status", "active"),
             }
         }
 
@@ -254,7 +231,7 @@ class AuthClient:
 
     def get_current_user(self) -> Optional[Dict[str, Any]]:
         """
-        获取当前登录用户
+        获取当前登录用户（简化版）
 
         Returns:
             用户信息或 None
@@ -263,10 +240,7 @@ class AuthClient:
             return None
 
         return {
-            "user_id": st.session_state.get('auth_user_id'),
             "username": st.session_state.get('auth_username'),
-            "email": st.session_state.get('auth_email', ''),
-            "role": st.session_state.get('auth_role', 'user'),
         }
 
     def is_authenticated(self) -> bool:
@@ -278,28 +252,15 @@ class AuthClient:
         """
         return st.session_state.get('auth_authenticated', False)
 
-    def is_admin(self) -> bool:
-        """
-        检查当前用户是否是管理员
-
-        Returns:
-            是否是管理员
-        """
-        return st.session_state.get('auth_role') == 'admin'
-
     def set_session(self, user: Dict[str, Any]) -> None:
         """
-        设置用户会话
+        设置用户会话（简化版）
 
         Args:
             user: 用户信息
         """
         st.session_state.auth_authenticated = True
-        st.session_state.auth_user_id = user.get("user_id")
         st.session_state.auth_username = user.get("username")
-        st.session_state.auth_email = user.get("email", "")
-        st.session_state.auth_role = user.get("role", "user")
-        st.session_state.auth_login_time = datetime.now()
 
         logger.info(f"用户会话已设置: {user.get('username')}")
 
@@ -308,28 +269,16 @@ class AuthClient:
         清除用户会话
         """
         st.session_state.auth_authenticated = False
-        st.session_state.auth_user_id = None
         st.session_state.auth_username = None
-        st.session_state.auth_email = None
-        st.session_state.auth_role = None
-        st.session_state.auth_login_time = None
 
         logger.info("用户会话已清除")
 
 
 def init_auth_state() -> None:
     """
-    初始化认证相关的会话状态
+    初始化认证相关的会话状态（简化版）
     """
     if 'auth_authenticated' not in st.session_state:
         st.session_state.auth_authenticated = False
-    if 'auth_user_id' not in st.session_state:
-        st.session_state.auth_user_id = None
     if 'auth_username' not in st.session_state:
         st.session_state.auth_username = None
-    if 'auth_email' not in st.session_state:
-        st.session_state.auth_email = None
-    if 'auth_role' not in st.session_state:
-        st.session_state.auth_role = None
-    if 'auth_login_time' not in st.session_state:
-        st.session_state.auth_login_time = None

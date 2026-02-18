@@ -63,7 +63,7 @@ def is_admin() -> bool:
 
 def get_current_user() -> Optional[dict]:
     """
-    获取当前登录用户信息
+    获取当前登录用户信息（简化版）
 
     Returns:
         用户信息字典，未登录返回 None
@@ -72,10 +72,7 @@ def get_current_user() -> Optional[dict]:
         return None
 
     return {
-        "user_id": st.session_state.get('auth_user_id'),
         "username": st.session_state.get('auth_username'),
-        "email": st.session_state.get('auth_email', ''),
-        "role": st.session_state.get('auth_role', 'user'),
     }
 
 
@@ -104,7 +101,7 @@ def logout() -> None:
 
 def render_user_info() -> None:
     """
-    在侧边栏渲染用户信息
+    在侧边栏渲染用户信息（简化版）
     """
     if is_authenticated():
         user = get_current_user()
@@ -114,15 +111,6 @@ def render_user_info() -> None:
             st.subheader("👤 用户信息")
 
             st.write(f"**用户名**: {user['username']}")
-            if user.get('email'):
-                st.write(f"**邮箱**: {user['email']}")
-
-            # 角色标签
-            role = user.get('role', 'user')
-            if role == 'admin':
-                st.success("🛡️ 管理员")
-            else:
-                st.info("👤 普通用户")
 
             if st.button("🚪 登出", use_container_width=True, key="sidebar_logout"):
                 logout()
