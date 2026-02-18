@@ -8,4 +8,7 @@ from .prompts import PromptTemplates
 # v3.0 认证模块
 from . import auth
 
-__all__ = ['Config', 'PromptTemplates', 'auth']
+# v4.0 偏好模块
+from . import preferences
+
+__all__ = ['Config', 'PromptTemplates', 'auth', 'preferences']

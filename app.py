@@ -14,8 +14,10 @@ from clients import (
     AIClient, WeatherClient, FeishuClient, create_amap_client, get_booking_client,
     init_auth_state  # v3.0 认证模块
 )
+from clients.user_client import FeishuUserClient  # v4.0 用户偏好
 from utils import Config, PromptTemplates
 from utils import auth as auth_utils  # v3.0 认证工具
+from utils import preferences as pref_utils  # v4.0 偏好工具
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -87,12 +89,26 @@ def init_clients(config):
         # 订票客户端 (v2.3.0)
         booking_client = get_booking_client()
 
+        # 用户偏好客户端 (v4.0)
+        user_client = None
+        if config.FEISHU_APP_TOKEN_USER and config.FEISHU_TABLE_ID_USER:
+            try:
+                user_client = FeishuUserClient(
+                    app_id=config.FEISHU_APP_ID,
+                    app_secret=config.FEISHU_APP_SECRET,
+                    user_app_token=config.FEISHU_APP_TOKEN_USER,
+                    user_table_id=config.FEISHU_TABLE_ID_USER
+                )
+            except Exception as e:
+                logger.warning(f"用户客户端初始化失败: {e}")
+
         return {
             "ai": ai_client,
             "feishu": feishu_client,
             "weather": weather_client,
             "amap": amap_client,
-            "booking": booking_client
+            "booking": booking_client,
+            "user": user_client  # v4.0
         }, True
     except Exception as e:
         logger.error(f"客户端初始化失败: {e}")
@@ -242,9 +258,28 @@ def render_request_form():
         preferences = st.text_area(
             "偏好/需求",
             value=st.session_state.selected_preference,
-            placeholder="例如：喜欢自然风光、想尝当地美食、带小孩...",
+            placeholder="例如：喜欢自然风光、想尝当地美食、带小孩、酒店200-300元...",
             help="有什么特殊需求或偏好？",
             height=80
+        )
+
+        # v4.0 显示已保存的偏好
+        saved_preferences_text = ""
+        if auth_utils.is_authenticated():
+            username = auth_utils.get_current_username()
+            user_client = st.session_state.get('clients', {}).get('user')
+            if user_client:
+                saved_prefs = user_client.get_user_preferences(username)
+                if saved_prefs:
+                    saved_preferences_text = pref_utils.preferences_to_text(saved_prefs)
+                    if saved_preferences_text:
+                        st.info(f"💾 已保存偏好: {saved_preferences_text}")
+
+        # v4.0 保存偏好选项
+        save_preferences = st.checkbox(
+            "💾 保存为默认偏好",
+            value=False,
+            help="勾选后，本次输入的偏好将保存为你的默认偏好，下次生成攻略时自动应用"
         )
 
         submitted = st.form_submit_button(
@@ -265,6 +300,7 @@ def render_request_form():
                 "end_date": end_date_input.strftime("%Y-%m-%d"),
                 "budget": budget,
                 "preferences": preferences,
+                "save_preferences": save_preferences,  # v4.0
             }
 
     return None
@@ -285,6 +321,48 @@ def generate_guide(request_data: Dict[str, Any], clients: Dict[str, Any]) -> Dic
     guide_id = str(uuid.uuid4())
 
     st.session_state.request_id = request_id
+
+    # v4.0 处理用户偏好
+    user_client = clients.get('user')
+    final_preferences = request_data.get('preferences', '')
+
+    if user_client and auth_utils.is_authenticated():
+        username = auth_utils.get_current_username()
+
+        # 1. 获取已保存的偏好
+        saved_prefs = user_client.get_user_preferences(username)
+
+        # 2. 从临时输入中提取偏好
+        temporary_prefs = pref_utils.extract_preferences_from_input(
+            final_preferences,
+            ai_client=clients.get('ai')
+        )
+
+        # 3. 合并偏好（已保存的 + 临时的）
+        if saved_prefs or temporary_prefs:
+            merged_prefs = pref_utils.merge_preferences(saved_prefs, temporary_prefs)
+            merged_text = pref_utils.preferences_to_text(merged_prefs)
+
+            # 如果合并后有偏好，添加到用户输入中
+            if merged_text:
+                if final_preferences:
+                    final_preferences = f"{final_preferences}（已加载默认偏好：{merged_text}）"
+                else:
+                    final_preferences = merged_text
+
+        # 4. 如果用户勾选了"保存偏好"，保存到飞书
+        if request_data.get('save_preferences') and temporary_prefs:
+            with st.spinner("💾 正在保存偏好..."):
+                updated_prefs = pref_utils.update_saved_preferences(saved_prefs, temporary_prefs)
+                result = user_client.update_user_preferences(username, updated_prefs)
+                if result.get('success'):
+                    st.success("✅ 偏好已保存")
+                else:
+                    st.warning(f"⚠️ 偏好保存失败: {result.get('error')}")
+
+    # 更新 request_data 中的偏好
+    request_data_with_prefs = request_data.copy()
+    request_data_with_prefs['preferences'] = final_preferences
 
     # 1. 获取天气信息
     weather_info = ""
@@ -346,7 +424,7 @@ def generate_guide(request_data: Dict[str, Any], clients: Dict[str, Any]) -> Dic
 
         ai_client = clients['ai']
         result = ai_client.generate_guide(
-            user_request=request_data,
+            user_request=request_data_with_prefs,  # v4.0 使用合并后的偏好
             weather_info=weather_info,
             traffic_info=traffic_info,
             booking_info=booking_info,
