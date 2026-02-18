@@ -22,9 +22,8 @@ st.set_page_config(
 init_auth_state()
 
 # ==================== 初始化客户端 ====================
-@st.cache_resource
 def get_auth_client():
-    """获取认证客户端（缓存）"""
+    """获取认证客户端（每次创建新实例，避免缓存问题）"""
     # 加载配置
     if not Config.load():
         st.error("配置加载失败，请联系管理员")
@@ -144,6 +143,9 @@ def main():
 
         还没有账号？
         点击下方"立即注册"按钮
+
+        ⏳ 等待审批？
+        管理员会在飞书表格中审批
         """)
 
         st.divider()

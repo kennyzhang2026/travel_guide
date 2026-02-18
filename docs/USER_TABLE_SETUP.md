@@ -1,58 +1,33 @@
-# 飞书用户表配置指南 (v3.0)
+# 飞书用户表配置指南 (v3.0 简化版)
 
 ## 概述
 
-v3.0 版本添加了用户认证功能，需要在飞书中创建第三个多维表格：**用户数据表**。
-
-## 飞书应用配置
-
-### 现有配置（v2.3.0 及之前）
-
-```
-飞书应用 (APP_ID/APP_SECRET 共用)
-├── 多维表格1: 旅行需求表
-│   ├── app_token: FEISHU_APP_TOKEN_REQUEST
-│   └── table_id: FEISHU_TABLE_ID_REQUEST
-│
-└── 多维表格2: 攻略存档表
-    ├── app_token: FEISHU_APP_TOKEN_GUIDE
-    └── table_id: FEISHU_TABLE_ID_GUIDE
-```
-
-### 新增配置（v3.0）
-
-```
-飞书应用 (APP_ID/APP_SECRET 共用)
-├── 多维表格1: 旅行需求表
-│   ├── app_token: FEISHU_APP_TOKEN_REQUEST
-│   └── table_id: FEISHU_TABLE_ID_REQUEST
-│
-├── 多维表格2: 攻略存档表
-│   ├── app_token: FEISHU_APP_TOKEN_GUIDE
-│   └── table_id: FEISHU_TABLE_ID_GUIDE
-│
-└── 多维表格3: 用户数据表 (新增)
-    ├── app_token: FEISHU_APP_TOKEN_USER
-    └── table_id: FEISHU_TABLE_ID_USER
-```
+v3.0 版本添加了用户认证功能，采用**最简方案**：
+- 用户在网页注册
+- 管理员在飞书表格中手动审批（将 status 从 `pending` 改为 `active`）
+- 密码明文存储（无加密）
 
 ## 创建飞书用户数据表
 
 ### 步骤 1：创建新的多维表格
 
-1. 访问 [飞书开放平台](https://open.feishu.cn/)
-2. 登录后，进入飞书文档
-3. 点击"新建" → "多维表格"
-4. 命名为"用户数据表"（或您喜欢的任何名称）
+1. 访问 [飞书文档](https://feishu.cn/)
+2. 登录后，点击"新建" → "多维表格"
+3. 命名为"用户数据表"（或您喜欢的任何名称）
 
-### 步骤 2：添加字段
+### 步骤 2：添加字段（仅 3 个）
 
-在多维表格中添加以下字段（**简化版，只需 2 个字段**）：
+在多维表格中添加以下字段：
 
-| 字段名称 | 字段类型 | 说明 | 是否必填 |
-|---------|---------|------|---------|
-| username | 文本 | 用户名（唯一） | ✅ 必填 |
-| password | 文本 | 密码哈希（bcrypt） | ✅ 必填 |
+| 字段名称 | 字段类型 | 说明 |
+|---------|---------|------|
+| username | 文本 | 用户名 |
+| password | 文本 | 密码（明文） |
+| status | 文本 | 状态：`pending` 或 `active` |
+
+**status 字段值说明**：
+- `pending` - 待审批（新注册用户的默认状态）
+- `active` - 已激活（管理员审批后才能登录）
 
 ### 步骤 3：获取 app_token 和 table_id
 
@@ -77,8 +52,6 @@ https://xxx.feishu.cn/base/bascnxxxxxxx/app_tokenxxxxxxx
 在 `.streamlit/secrets.toml` 文件中添加：
 
 ```toml
-# ... 其他配置 ...
-
 # v3.0 认证模块 - 飞书用户表配置
 FEISHU_APP_TOKEN_USER = "your_user_app_token"
 FEISHU_TABLE_ID_USER = "your_user_table_id"
@@ -86,95 +59,59 @@ FEISHU_TABLE_ID_USER = "your_user_table_id"
 
 ## 配置飞书应用权限
 
-### 方式一：在飞书开放平台配置
-
 1. 访问 [飞书开放平台](https://open.feishu.cn/app)
-2. 找到您的应用
-3. 进入"权限管理"
-4. 添加以下权限：
-   - `bitable:app` - 查看、评论和编辑多维表格
+2. 找到您的应用，进入"权限管理"
+3. 添加权限：`bitable:app` - 查看、评论和编辑多维表格
 
-### 方式二：在多维表格中配置
-
+或者直接在多维表格中：
 1. 打开用户数据表
-2. 点击右上角"分享"按钮
+2. 点击右上角"分享"
 3. 添加您的企业自建应用
 4. 设置权限为"可编辑"
 
-## 验证配置
+## 使用流程
 
-1. 启动应用：`streamlit run app.py`
-2. 访问登录页面
-3. 检查侧边栏的系统状态
-4. 确认显示"✅ 系统正常"
-
-## 创建测试账号
-
-创建第一个测试账号：
-
-### 方法一：直接在飞书中添加
-
-1. 打开用户数据表
-2. 添加一条记录：
-   - username: `admin`
-   - password: 需要生成哈希值（见下方）
-
-### 方法二：使用注册功能
+### 用户注册
 
 1. 访问注册页面
-2. 注册一个账号即可直接使用
+2. 输入用户名和密码
+3. 注册成功后，状态自动设为 `pending`
+4. 等待管理员审批
 
-### 生成密码哈希
+### 管理员审批
 
-您可以使用以下 Python 代码生成密码哈希：
+1. 打开飞书用户数据表
+2. 找到待审批的用户（status = `pending`）
+3. 将 `status` 字段改为 `active`
+4. 完成！
 
-```python
-import bcrypt
+### 用户登录
 
-password = "your_password"
-salt = bcrypt.gensalt()
-hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
-print(hashed.decode('utf-8'))
-```
+1. 访问登录页面
+2. 输入用户名和密码
+3. 如果 status = `active`，登录成功
 
-例如，密码 `admin123` 的哈希值（示例）：
-```
-$2b$12$abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ
-```
+## 创建管理员账号
 
-## 测试流程
+直接在飞书表格中添加：
 
-1. 启动应用
-2. 访问主页，应显示登录提示
-3. 点击"注册"，创建测试账号
-4. 注册成功后自动跳转到登录页
-5. 使用注册的账号登录
-6. 登录成功后跳转到主页
-7. 可以正常使用攻略生成功能
+| username | password | status |
+|----------|----------|--------|
+| admin | your_admin_password | active |
 
 ## 故障排除
 
 ### 问题：系统显示"系统异常"
 
-**解决方案**：
 1. 检查 `FEISHU_APP_TOKEN_USER` 和 `FEISHU_TABLE_ID_USER` 是否正确
 2. 检查飞书应用是否有权限访问该表
-3. 查看应用日志获取详细错误信息
 
-### 问题：注册失败
+### 问题：登录时提示"等待管理员审批"
 
-**解决方案**：
-1. 检查用户名是否符合要求（3-20字符，字母数字下划线）
-2. 检查用户名是否已存在
-3. 查看应用日志获取详细错误信息
-
-### 问题：登录失败
-
-**解决方案**：
-1. 确认账号已成功注册
-2. 检查密码是否正确
-3. 在飞书中检查用户状态是否为 `active`
+1. 打开飞书用户数据表
+2. 找到该用户
+3. 将 `status` 改为 `active`
 
 ---
 
-**注意**: 密码采用 bcrypt 加密存储，即使数据库管理员也无法查看明文密码。请妥善保管您的密码！
+**注意**: 此方案采用密码明文存储，仅供内部使用。如需更高安全性，请使用加密版本。

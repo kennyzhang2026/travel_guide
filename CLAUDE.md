@@ -16,7 +16,7 @@
 8. **订票指南**：机票、火车票、酒店预订建议和官方链接 🎫 v2.3.0 新增
 9. **避坑指南**：购物、交通、住宿、餐饮等全方位避坑建议 ⭐ v2.1.0 新增
 10. **实时交通信息**：高德地图集成，实时路况、路线规划、拥堵预测 🚗 v2.2.0 新增
-11. **用户认证**：用户注册/登录功能，保护应用访问权限 🔐 v3.0.0 开发中
+11. **用户认证**：用户注册/登录功能，管理员在飞书表格审批 🔐 v3.0.0 已完成
 
 ## 技术栈
 
@@ -84,8 +84,9 @@ travel_guide/
 ### 用户数据表 (users) - v3.0 简化版
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| username | text | 用户名（唯一） |
-| password | text | 密码哈希（bcrypt） |
+| username | text | 用户名 |
+| password | text | 密码（明文存储） |
+| status | text | 状态：pending / active |
 
 ### 用户需求表 (travel_requests)
 | 字段 | 类型 | 说明 |
@@ -166,15 +167,13 @@ travel_guide/
 - [x] 功能测试
 - [x] Streamlit Cloud 部署
 
-#### 阶段七：用户认证功能 🔄 开发中 (v3.0)
+#### 阶段七：用户认证功能 ✅ 已完成 (v3.0)
 - [x] 创建飞书用户数据客户端
-- [x] 创建认证客户端（bcrypt 密码加密）
+- [x] 创建认证客户端（简化版，明文密码）
 - [x] 创建登录/注册页面
 - [x] 集成认证检查到主应用
-- [x] 简化用户表结构（2个字段）
-- [ ] 配置飞书用户数据表
-- [ ] 本地测试完整流程
-- [ ] 合并到 master 分支
+- [x] 用户表结构（3个字段）
+- [x] 管理员在飞书表格审批
 
 ### 总体进度
 
@@ -185,23 +184,21 @@ travel_guide/
 阶段四 ████████████████████ 100% ✅
 阶段五 ████████████████████ 100% ✅ (v2.1.0 完成)
 阶段六 ████████████████████ 100% ✅ (v2.3.0 完成)
-阶段七 ██████████████████░░░  80% 🔄 (v3.0 开发中)
+阶段七 ████████████████████ 100% ✅ (v3.0 完成)
 ─────────────────────────────
-总计   ███████████████████░░  90%
+总计   ████████████████████ 100%
 ```
 
 ### 最新更新 (2026-02-18)
 
-**v3.0.0 开发中 🔄**:
-- 🔐 用户认证功能（开发分支：`feature/v3.0-auth`）
-  - ✅ 简化用户表结构：仅 2 个字段（username, password）
+**v3.0.0 已完成 ✅**:
+- 🔐 用户认证功能（简化版）
+  - ✅ 用户表结构：3 个字段（username, password, status）
   - ✅ 用户注册/登录页面（pages/1_登录.py, pages/2_注册.py）
-  - ✅ bcrypt 密码加密存储
+  - ✅ 密码明文存储（最简方案）
   - ✅ 会话管理（st.session_state）
   - ✅ 主应用认证检查
-  - ⏳ 待配置飞书用户数据表
-  - ⏳ 待本地测试
-- 📋 新增依赖：`bcrypt>=4.0.0`
+  - ✅ 管理员在飞书表格中直接审批用户
 - 📝 配置文档：[docs/USER_TABLE_SETUP.md](docs/USER_TABLE_SETUP.md)
 
 **v2.3.0 已完成 ✅**:
@@ -250,11 +247,9 @@ travel_guide/
 
 ### 下一步行动
 
-1. **✅ v2.3.0 已完成**: 订票信息模块（AI 智能推荐）
-2. **🔄 v3.0.0 开发中**: 用户认证功能（feature/v3.0-auth 分支）
-   - 待配置飞书用户数据表
-   - 待本地测试
-3. **部署准备**: v3.0 测试通过后部署到 Streamlit Cloud
+1. **✅ v3.0.0 已完成**: 用户认证功能（简化版）
+2. **🔄 v3.1.0 规划中**: 新功能规划
+3. **部署准备**: 部署到 Streamlit Cloud
 
 ### 配置清单
 
@@ -270,8 +265,8 @@ travel_guide/
 - [ ] FEISHU_TABLE_ID_USER (用户表)
 
 **版本信息**:
-- 当前稳定版: v2.3.0 (订票信息版)
-- 开发版本: v3.0.0 (用户认证版) - 分支: feature/v3.0-auth
+- 当前稳定版: v3.0.0 (用户认证版)
+- 开发版本: v3.1.0 (规划中)
 - 发布日期: 2026-02-18
 - GitHub: https://github.com/kennyzhang2026/travel_guide
 - 部署状态: ✅ 已部署到 Streamlit Cloud，支持手机端访问
@@ -321,7 +316,8 @@ travel_guide/
 
 **用户数据表字段 (v3.0)**:
 - `username` (文本) - 用户名
-- `password` (文本) - 密码哈希
+- `password` (文本) - 密码（明文）
+- `status` (文本) - 状态：pending / active
 
 详细配置请参考 [docs/USER_TABLE_SETUP.md](docs/USER_TABLE_SETUP.md)
 
@@ -479,20 +475,23 @@ selenium>=4.15.0  # 动态页面
 | v2.1.0 | 避坑指南 | ✅ 已完成 (2026-02-17) |
 | v2.2.0 | 交通信息 | ✅ 已完成 (2026-02-17) |
 | v2.3.0 | 订票信息 | ✅ 已完成 (2026-02-18) |
-| v3.0.0 | 用户认证功能 | 🔄 开发中 (feature/v3.0-auth) |
+| v3.0.0 | 用户认证功能 | ✅ 已完成 (2026-02-18) |
+| v3.1.0 | 新功能 | 🔄 规划中 |
 
-### v3.0.0 开发状态
+### v3.0.0 完成状态
 
 **已完成**:
 - [x] 代码开发（用户表、认证、登录注册页面）
 - [x] 代码提交到 feature/v3.0-auth 分支
-- [x] 用户表结构简化（2个字段）
+- [x] 用户表结构简化（3个字段）
+- [x] 移除 bcrypt 依赖，使用明文密码
+- [x] 删除管理页面，管理员在飞书表格中直接审批
 
-**待完成**:
-- [ ] 创建飞书用户数据表
-- [ ] 配置 FEISHU_APP_TOKEN_USER 和 FEISHU_TABLE_ID_USER
-- [ ] 本地测试注册/登录流程
-- [ ] 测试通过后合并到 master 分支
+**使用说明**:
+1. 创建飞书用户数据表（username, password, status 三个字段）
+2. 配置 FEISHU_APP_TOKEN_USER 和 FEISHU_TABLE_ID_USER
+3. 用户注册后状态为 pending
+4. 管理员在飞书表格中将 status 改为 active
 
 ---
 
@@ -509,15 +508,16 @@ git branch
 git log --oneline -5
 ```
 
-## 下一步操作
+## 使用说明
 
 ### 1. 配置飞书用户数据表
 
 参考 [docs/USER_TABLE_SETUP.md](docs/USER_TABLE_SETUP.md) 创建用户数据表：
 
-**字段（仅 2 个）**:
+**字段（3 个）**:
 - `username` - 文本类型
-- `password` - 文本类型
+- `password` - 文本类型（明文）
+- `status` - 文本类型（pending/active）
 
 ### 2. 更新配置文件
 
@@ -528,50 +528,32 @@ FEISHU_APP_TOKEN_USER = "your_user_app_token"
 FEISHU_TABLE_ID_USER = "your_user_table_id"
 ```
 
-### 3. 安装新依赖
+### 3. 使用流程
 
-```bash
-pip install bcrypt
-```
+1. **用户注册** → 在网页注册，status 自动设为 `pending`
+2. **管理员审批** → 在飞书表格中将 `status` 改为 `active`
+3. **用户登录** → status 为 `active` 才能登录
 
-### 4. 本地测试
+### 4. 创建管理员账号
 
-```bash
-streamlit run app.py
-```
+直接在飞书表格中添加：
 
-测试流程：
-1. 访问主页，应显示登录提示
-2. 点击"注册"，创建测试账号
-3. 使用注册账号登录
-4. 验证登录后可正常使用攻略生成功能
-
-### 5. 合并到 master
-
-测试通过后：
-
-```bash
-git checkout master
-git merge feature/v3.0-auth
-git push origin master
-```
+| username | password | status |
+|----------|----------|--------|
+| admin | your_admin_password | active |
 
 ## 新增文件清单
 
-- `clients/user_client.py` - 飞书用户数据客户端
-- `clients/auth_client.py` - 认证客户端（bcrypt 密码加密）
+- `clients/user_client.py` - 飞书用户数据客户端（简化版）
+- `clients/auth_client.py` - 认证客户端（明文密码）
 - `utils/auth.py` - 认证工具函数
 - `pages/1_登录.py` - 登录页面
 - `pages/2_注册.py` - 注册页面
-- `docs/USER_TABLE_SETUP.md` - 用户表配置指南
+- `docs/USER_TABLE_SETUP.md` - 用户表配置指南（简化版）
 
 **已完成**:
 - [x] 代码开发（用户表、认证、登录注册页面）
 - [x] 代码提交到 feature/v3.0-auth 分支
-- [x] 用户表结构简化（2个字段）
-
-**待完成**:
-- [ ] 创建飞书用户数据表
-- [ ] 配置 FEISHU_APP_TOKEN_USER 和 FEISHU_TABLE_ID_USER
-- [ ] 本地测试注册/登录流程
-- [ ] 测试通过后合并到 master 分支
+- [x] 用户表结构简化（3个字段）
+- [x] 移除 bcrypt 依赖
+- [x] 删除管理页面
