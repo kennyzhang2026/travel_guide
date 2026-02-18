@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Claude settings
+.claude/
+
 # C extensions
 *.so
 
@@ -159,3 +162,4 @@ test_*.py
 *credentials*
 *_config.json
 auth_tokens/
+.claude/
