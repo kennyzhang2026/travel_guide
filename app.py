@@ -427,10 +427,7 @@ def render_guide(guide_data: Dict[str, Any]):
         with st.expander("🚗 交通信息", expanded=True):
             st.markdown(guide_data['traffic_info'])
 
-    # 显示订票信息 (v2.3.0)
-    if guide_data.get('booking_info'):
-        with st.expander("🎫 订票指南", expanded=True):
-            st.markdown(guide_data['booking_info'])
+    # 订票信息已整合到 AI 生成的攻略第九章中，不再单独展示 (v2.3.0)
 
     st.divider()
 
@@ -517,8 +514,7 @@ def render_guide(guide_data: Dict[str, Any]):
         copy_text += f"{guide_data['weather_info']}\n\n"
     if guide_data.get('traffic_info'):
         copy_text += f"{guide_data['traffic_info']}\n\n"
-    if guide_data.get('booking_info'):
-        copy_text += f"{guide_data['booking_info']}\n\n"
+    # 订票信息已整合到 AI 生成的攻略中
     copy_text += guide_data.get('content', '')
 
     # 显示攻略内容供复制
