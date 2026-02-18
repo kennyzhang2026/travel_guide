@@ -10,8 +10,12 @@ from typing import Dict, Any
 import uuid
 
 # 导入客户端和工具
-from clients import AIClient, WeatherClient, FeishuClient, create_amap_client, get_booking_client
+from clients import (
+    AIClient, WeatherClient, FeishuClient, create_amap_client, get_booking_client,
+    init_auth_state  # v3.0 认证模块
+)
 from utils import Config, PromptTemplates
+from utils import auth as auth_utils  # v3.0 认证工具
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +32,9 @@ st.set_page_config(
 # ==================== 初始化会话状态 ====================
 def init_session_state():
     """初始化会话状态"""
+    # v3.0 认证模块 - 初始化认证状态
+    init_auth_state()
+
     if 'config_loaded' not in st.session_state:
         st.session_state.config_loaded = False
     if 'clients_initialized' not in st.session_state:
@@ -96,6 +103,11 @@ def render_sidebar():
     """渲染侧边栏"""
     with st.sidebar:
         st.title("🌍 智能旅游助手")
+
+        st.divider()
+
+        # v3.0 认证模块 - 用户信息
+        auth_utils.render_user_info()
 
         st.divider()
 
@@ -548,6 +560,16 @@ def render_guide(guide_data: Dict[str, Any]):
 def main():
     """主函数"""
     init_session_state()
+
+    # v3.0 认证模块 - 检查登录状态
+    if not auth_utils.is_authenticated():
+        # 未登录，显示登录提示
+        st.title("🌍 智能旅游攻略生成器")
+        st.markdown("---")
+        auth_utils.render_login_prompt()
+
+        # 停止执行
+        st.stop()
 
     # 加载配置
     if not st.session_state.config_loaded:

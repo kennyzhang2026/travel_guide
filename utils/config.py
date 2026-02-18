@@ -26,6 +26,10 @@ class Config:
     FEISHU_APP_TOKEN_GUIDE: str = ""
     FEISHU_TABLE_ID_GUIDE: str = ""
 
+    # v3.0 认证模块 - 飞书用户表配置
+    FEISHU_APP_TOKEN_USER: str = ""
+    FEISHU_TABLE_ID_USER: str = ""
+
     # 天气 API 配置
     WEATHER_API_KEY: str = ""
 
@@ -56,6 +60,10 @@ class Config:
                 cls.FEISHU_TABLE_ID_REQUEST = secrets.get("FEISHU_TABLE_ID_REQUEST", "")
                 cls.FEISHU_APP_TOKEN_GUIDE = secrets.get("FEISHU_APP_TOKEN_GUIDE", "")
                 cls.FEISHU_TABLE_ID_GUIDE = secrets.get("FEISHU_TABLE_ID_GUIDE", "")
+
+                # v3.0 认证模块 - 飞书用户表配置
+                cls.FEISHU_APP_TOKEN_USER = secrets.get("FEISHU_APP_TOKEN_USER", "")
+                cls.FEISHU_TABLE_ID_USER = secrets.get("FEISHU_TABLE_ID_USER", "")
 
                 # 天气 API
                 cls.WEATHER_API_KEY = secrets.get("WEATHER_API_KEY", "")
@@ -93,6 +101,10 @@ class Config:
         cls.FEISHU_APP_TOKEN_GUIDE = os.getenv("FEISHU_APP_TOKEN_GUIDE", "")
         cls.FEISHU_TABLE_ID_GUIDE = os.getenv("FEISHU_TABLE_ID_GUIDE", "")
 
+        # v3.0 认证模块 - 飞书用户表配置
+        cls.FEISHU_APP_TOKEN_USER = os.getenv("FEISHU_APP_TOKEN_USER", "")
+        cls.FEISHU_TABLE_ID_USER = os.getenv("FEISHU_TABLE_ID_USER", "")
+
         # 天气 API
         cls.WEATHER_API_KEY = os.getenv("WEATHER_API_KEY", "")
 
@@ -127,6 +139,9 @@ class Config:
                 cls.FEISHU_TABLE_ID_REQUEST,
                 cls.FEISHU_APP_TOKEN_GUIDE,
                 cls.FEISHU_TABLE_ID_GUIDE,
+                # v3.0 认证模块
+                cls.FEISHU_APP_TOKEN_USER,
+                cls.FEISHU_TABLE_ID_USER,
             ]
             if not all(required_feishu):
                 logger.warning("飞书配置不完整")
@@ -151,6 +166,7 @@ class Config:
             "feishu_app_id": bool(cls.FEISHU_APP_ID),
             "feishu_request_tokens": bool(cls.FEISHU_APP_TOKEN_REQUEST and cls.FEISHU_TABLE_ID_REQUEST),
             "feishu_guide_tokens": bool(cls.FEISHU_APP_TOKEN_GUIDE and cls.FEISHU_TABLE_ID_GUIDE),
+            "feishu_user_tokens": bool(cls.FEISHU_APP_TOKEN_USER and cls.FEISHU_TABLE_ID_USER),  # v3.0
             "weather_api_key": bool(cls.WEATHER_API_KEY),
             "amap_api_key": bool(cls.AMAP_API_KEY),
         }
@@ -185,5 +201,11 @@ class Config:
             missing.append("FEISHU_APP_TOKEN_GUIDE")
         if not cls.FEISHU_TABLE_ID_GUIDE:
             missing.append("FEISHU_TABLE_ID_GUIDE")
+
+        # v3.0 认证模块
+        if not cls.FEISHU_APP_TOKEN_USER:
+            missing.append("FEISHU_APP_TOKEN_USER")
+        if not cls.FEISHU_TABLE_ID_USER:
+            missing.append("FEISHU_TABLE_ID_USER")
 
         return missing

@@ -5,4 +5,7 @@
 from .config import Config
 from .prompts import PromptTemplates
 
-__all__ = ['Config', 'PromptTemplates']
+# v3.0 认证模块
+from . import auth
+
+__all__ = ['Config', 'PromptTemplates', 'auth']

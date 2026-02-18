@@ -8,4 +8,19 @@ from .weather_client import WeatherClient
 from .amap_client import create_amap_client
 from .booking_client import BookingClient, get_booking_client
 
-__all__ = ['AIClient', 'FeishuClient', 'WeatherClient', 'create_amap_client', 'BookingClient', 'get_booking_client']
+# v3.0 认证模块
+from .user_client import FeishuUserClient
+from .auth_client import AuthClient, init_auth_state
+
+__all__ = [
+    'AIClient',
+    'FeishuClient',
+    'WeatherClient',
+    'create_amap_client',
+    'BookingClient',
+    'get_booking_client',
+    # v3.0 认证模块
+    'FeishuUserClient',
+    'AuthClient',
+    'init_auth_state',
+]
